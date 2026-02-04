@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Falling Objects Quiz (New Bomb)</title>
+    <title>Falling Objects Quiz (Confetti)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- ОСНОВНЫЕ СТИЛИ --- */
@@ -101,6 +101,21 @@
             border-radius: 4px; font-size: 18px; font-weight: bold; white-space: nowrap;
             margin-top: -60px; text-shadow: 0 0 2px black;
             border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* --- КОНФЕТТИ (НОВОЕ) --- */
+        .confetti {
+            position: absolute;
+            width: 10px; height: 10px;
+            background-color: #f00;
+            top: -10px;
+            z-index: 25; /* Поверх оверлея (он 20) */
+            pointer-events: none;
+            opacity: 0;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
 
         /* Эффекты */
@@ -219,10 +234,8 @@
         lifeImage: "https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif", 
         heroImage: "https://img.genially.com/684ea2da1b51060014c50e97/ea80b435-14c0-4490-b057-d9b367d6d8b8.png",
         
-        // НОВАЯ БОМБА (ДИНАМИТ):
         bombImage: "https://img.genially.com/684ea2da1b51060014c50e97/1100a032-bbfa-469f-aa6c-454364216500.png",
         
-        // Подарки
         giftImageCorrect: "https://img.genially.com/684ea2da1b51060014c50e97/6caada9a-c539-4f5d-952c-c63df7c459f4.png",
         giftImageWrong: "https://img.genially.com/684ea2da1b51060014c50e97/152eafba-7d36-41e3-9026-b78a900821bd.png",
         
@@ -271,6 +284,9 @@
     function startGame() {
         if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
         clearInterval(state.spawnTimer);
+
+        // Очистить старое конфетти
+        document.querySelectorAll('.confetti').forEach(c => c.remove());
 
         state.lives = GAME_CONFIG.maxLives;
         state.currentQIndex = 0;
@@ -487,7 +503,35 @@
         playSound('snd-win');
         els.progressFill.style.width = '100%'; 
         els.overlays.win.classList.remove('hidden');
+        fireConfetti(); // ЗАПУСК КОНФЕТТИ
     }
+
+    // --- ФУНКЦИЯ КОНФЕТТИ ---
+    function fireConfetti() {
+        const colors = ['#d13447', '#ffbf00', '#263672', '#7b2cbf', '#8ac926', '#1982c4'];
+        
+        for (let i = 0; i < 150; i++) {
+            const conf = document.createElement('div');
+            conf.classList.add('confetti');
+            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Случайная позиция по X
+            conf.style.left = Math.random() * 100 + 'vw';
+            
+            // Случайная задержка и длительность
+            const duration = Math.random() * 3 + 2; // 2-5 сек
+            conf.style.animation = `confettiFall ${duration}s linear forwards`;
+            conf.style.animationDelay = Math.random() * 2 + 's';
+            
+            // Случайный размер
+            const size = Math.random() * 10 + 5;
+            conf.style.width = size + 'px';
+            conf.style.height = size * 0.6 + 'px';
+
+            els.container.appendChild(conf);
+        }
+    }
+
     function hideAllOverlays() { Object.values(els.overlays).forEach(el => el.classList.add('hidden')); }
     function resize() { state.heroX = (els.container.offsetWidth - 100) / 2; els.hero.style.left = state.heroX + "px"; }
     function setupListeners() {

@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Falling Objects Quiz (With Pause)</title>
+    <title>Falling Objects Quiz (Big Hero + New Gifts)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- ОСНОВНЫЕ СТИЛИ --- */
@@ -25,34 +25,23 @@
             pointer-events: none; 
         }
 
-        /* Верхняя панель с кнопкой паузы и прогрессом */
+        /* Верхняя панель */
         .top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            pointer-events: auto; /* Чтобы кнопка нажималась */
+            display: flex; align-items: center; justify-content: center;
+            gap: 15px; pointer-events: auto;
         }
 
-        /* Кнопка ПАУЗЫ */
         #pause-btn {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            background: #ffcc00;
-            color: #333;
-            font-weight: bold;
-            font-size: 20px;
-            cursor: pointer;
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 2px solid #fff; background: #ffcc00; color: #333;
+            font-weight: bold; font-size: 20px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.1s;
         }
         #pause-btn:active { transform: scale(0.9); }
 
         .progress-container {
-            flex-grow: 1; /* Растягиваем на всю ширину */
-            max-width: 600px; height: 20px;
+            flex-grow: 1; max-width: 600px; height: 20px;
             background: rgba(0,0,0,0.5); border: 2px solid rgba(255, 255, 255, 0.8);
             border-radius: 10px; overflow: hidden; position: relative;
         }
@@ -96,7 +85,10 @@
 
         /* --- ИГРОВЫЕ ЭЛЕМЕНТЫ --- */
         #hero {
-            position: absolute; bottom: 30px; width: 100px; height: 130px;
+            position: absolute; bottom: 30px; 
+            /* УВЕЛИЧЕННЫЙ РАЗМЕР ГЕРОЯ: */
+            width: 150px; height: 190px;
+            
             background-repeat: no-repeat; background-position: center; background-size: contain;
             transform-origin: center bottom; transition: transform 0.1s linear; z-index: 5;
         }
@@ -229,8 +221,12 @@
         lifeImage: "https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif", 
         heroImage: "https://img.genially.com/684ea2da1b51060014c50e97/ea80b435-14c0-4490-b057-d9b367d6d8b8.png",
         bombImage: "https://i.postimg.cc/tCfZ91wG/3.png",
-        giftImageCorrect: "https://i.postimg.cc/RCGR6kpR/podarok-dudl.png",
-        giftImageWrong: "https://i.postimg.cc/fbtxnZY7/1.png",
+        
+        // НОВЫЕ ПОДАРКИ:
+        // Красная коробка = Правильно
+        giftImageCorrect: "https://img.genially.com/684ea2da1b51060014c50e97/6caada9a-c539-4f5d-952c-c63df7c459f4.png",
+        // Синяя коробка = Неправильно
+        giftImageWrong: "https://img.genially.com/684ea2da1b51060014c50e97/152eafba-7d36-41e3-9026-b78a900821bd.png",
         
         heroSpeed: 6, fallSpeedBase: 2, spawnInterval: 900, maxLives: 3,
         
@@ -242,7 +238,7 @@
     };
 
     let state = {
-        isRunning: false, isPaused: false, // Флаг паузы
+        isRunning: false, isPaused: false,
         currentQIndex: 0, lives: GAME_CONFIG.maxLives,
         heroX: 0, heroFlipped: false, activeObjects: [], lastTime: 0,
         spawnTimer: 0, animationFrameId: null,
@@ -295,19 +291,15 @@
     }
 
     function togglePause() {
-        if (!state.isRunning) return; // Нельзя ставить на паузу, если игра не идет
-
+        if (!state.isRunning) return; 
         state.isPaused = !state.isPaused;
 
         if (state.isPaused) {
-            // ПАУЗА ВКЛЮЧЕНА
-            clearInterval(state.spawnTimer); // Остановить спавн
+            clearInterval(state.spawnTimer); 
             els.overlays.pause.classList.remove('hidden');
-            // Игровой цикл останавливается сам, т.к. в gameLoop есть проверка
         } else {
-            // ПАУЗА ВЫКЛЮЧЕНА (ПРОДОЛЖИТЬ)
             els.overlays.pause.classList.add('hidden');
-            state.lastTime = performance.now(); // Сбросить таймер, чтобы не было скачка
+            state.lastTime = performance.now(); 
             state.spawnTimer = setInterval(spawnLogic, GAME_CONFIG.spawnInterval);
             state.animationFrameId = requestAnimationFrame(gameLoop);
         }
@@ -323,16 +315,8 @@
     }
 
     function gameLoop(time) {
-        // Если пауза, мы просто не запрашиваем следующий кадр,
-        // но лучше просто делать return, чтобы цикл "жил", но не обновлял позиции.
         if (!state.isRunning) return;
-        
-        if (state.isPaused) {
-            // Если на паузе, ничего не обновляем, но цикл не убиваем (можно и убить, но так проще)
-            // В данном случае мы просто выходим.
-            // Перезапуск цикла будет при нажатии "Продолжить"
-            return; 
-        }
+        if (state.isPaused) return; 
 
         const dt = (time - state.lastTime) / 16; 
         state.lastTime = time;
@@ -383,7 +367,7 @@
     }
 
     function spawnLogic() {
-        if (!state.isRunning || state.isPaused) return; // Не спавним на паузе
+        if (!state.isRunning || state.isPaused) return; 
         if (state.currentQIndex >= GAME_CONFIG.questions.length) return;
 
         const q = GAME_CONFIG.questions[state.currentQIndex];
@@ -511,7 +495,7 @@
     function setupListeners() {
         window.addEventListener('resize', resize);
         window.addEventListener('keydown', e => {
-            if (e.code === 'Space') togglePause(); // Пауза на пробел
+            if (e.code === 'Space') togglePause();
             if(e.code === 'ArrowLeft' || e.code === 'KeyA') state.keys.left = true;
             if(e.code === 'ArrowRight' || e.code === 'KeyD') state.keys.right = true;
         });
@@ -520,12 +504,10 @@
             if(e.code === 'ArrowRight' || e.code === 'KeyD') state.keys.right = false;
         });
         
-        // Кнопки
         document.getElementById('btn-start').addEventListener('click', startGame);
         document.getElementById('btn-retry').addEventListener('click', startGame);
         document.getElementById('btn-restart').addEventListener('click', startGame);
         
-        // Пауза
         els.buttons.pause.addEventListener('click', togglePause);
         els.buttons.resume.addEventListener('click', togglePause);
     }

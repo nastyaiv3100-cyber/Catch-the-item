@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Falling Objects Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- ОСНОВНЫЕ СТИЛИ --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: "Roboto Condensed", sans-serif; }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            /* Фон можно будет менять через редактор */
+            background: url("https://i.postimg.cc/DwDH6J98/fon-grinc-rozdestvo.png") center/cover no-repeat;
+        }
+
+        /* --- ИНТЕРФЕЙС (UI) --- */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            padding: 15px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none; /* Чтобы клики проходили сквозь интерфейс */
+        }
+
+        /* Прогресс бар */
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffa500);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Блок с вопросом */
+        #question-box {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #ffcc00;
+            border-radius: 15px;
+            padding: 15px 20px;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #question-text {
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* Жизни */
+        #lives-box {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            filter: drop-shadow(0 0 2px black);
+        }
+
+        /* --- ИГРОВЫЕ ЭЛЕМЕНТЫ --- */
+        #hero {
+            position: absolute;
+            bottom: 30px;
+            width: 100px; /* Базовый размер, меняется JS */
+            height: 130px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            /* Дефолтный герой, можно менять */
+            background-image: url("https://i.postimg.cc/V6FvXj9M/grinc-kopia.png");
+            transform-origin: center bottom;
+            transition: transform 0.1s linear;
+            z-index: 5;
+        }
+
+        .falling {
+            position: absolute;
+            top: -100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            will-change: top;
+            z-index: 4;
+        }
+        
+        .item-label {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 18px;
+            font-weight: bold;
+            white-space: nowrap;
+            margin-top: -60px; /* Поднять текст над предметом */
+            text-shadow: 0 0 2px black;
+        }
+
+        /* Эффект тряски для экрана (бомба) */
+        @keyframes shakeAnim {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-screen {
+            animation: shakeAnim 0.5s;
+        }
+
+        /* --- OVERLAYS --- */
+        .overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 20;
+            opacity: 1; transition: opacity 0.3s;
+        }
+        .overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        .modal {
+            background: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            border: 4px solid #ffcc00;
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
+        }
+        .modal h1 { color: #333; margin-bottom: 10px; }
+        .modal p { color: #555; font-size: 18px; margin-bottom: 20px; }
+        
+        button.btn-primary {
+            background: linear-gradient(to bottom, #ffcc00, #ff9900);
+            border: none;
+            padding: 12px 30px;
+            font-size: 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        button.btn-primary:active { transform: scale(0.95); }
+
+        /* Всплывающие очки */
+        .floating-text {
+            position: absolute;
+            font-weight: bold;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 1s forwards;
+            z-index: 15;
+            text-shadow: 0 0 5px black;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    
+    <div id="ui-layer">
+        <div class="progress-container">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div id="lives-box">❤❤❤</div>
+        <div id="question-box">
+            <div id="question-text">Загрузка...</div>
+        </div>
+    </div>
+
+    <div id="hero"></div>
+
+    <div id="start-overlay" class="overlay">
+        <div class="modal">
+            <h1>Падающие предметы</h1>
+            <p>Лови правильные ответы, избегай бомб и ошибок!</p>
+            <button class="btn-primary" id="btn-start">ИГРАТЬ</button>
+        </div>
+    </div>
+
+    <div id="game-over-overlay" class="overlay hidden">
+        <div class="modal">
+            <h1 style="color: #d9534f;">Ой!</h1>
+            <p>Жизни закончились.</p>
+            <button class="btn-primary" id="btn-retry">ПОПРОБОВАТЬ СНОВА</button>
+        </div>
+    </div>
+
+    <div id="win-overlay" class="overlay hidden">
+        <div class="modal">
+            <h1 style="color: #5cb85c;">Победа!</h1>
+            <p>Все вопросы пройдены!</p>
+            <button class="btn-primary" id="btn-restart">ЕЩЁ РАЗ</button>
+        </div>
+    </div>
+</div>
+
+<audio id="snd-correct" src=""></audio> 
+<audio id="snd-wrong" src=""></audio>
+<audio id="snd-win" src=""></audio>
+<audio id="snd-lose" src=""></audio>
+
+<script>
+    // ==========================================
+    // 1. КОНФИГУРАЦИЯ (Будет настраиваться в редакторе)
+    // ==========================================
+    const GAME_CONFIG = {
+        heroImage: "https://i.postimg.cc/V6FvXj9M/grinc-kopia.png",
+        bgImage: "https://i.postimg.cc/DwDH6J98/fon-grinc-rozdestvo.png",
+        bombImage: "https://i.postimg.cc/tCfZ91wG/3.png",
+        giftImageCorrect: "https://i.postimg.cc/RCGR6kpR/podarok-dudl.png", // Или разные для разнообразия
+        giftImageWrong: "https://i.postimg.cc/fbtxnZY7/1.png",
+        
+        heroSpeed: 6,       // Скорость героя
+        fallSpeedBase: 2,   // Базовая скорость падения
+        spawnInterval: 900, // Как часто падают предметы (мс)
+        
+        maxLives: 3,
+        
+        // Данные игры (Вопросы)
+        questions: [
+            {
+                text: "Какой сейчас год?",
+                correct: ["2026"],
+                wrong: ["2025", "2024", "1999", "3000"]
+            },
+            {
+                text: "Столица Франции?",
+                correct: ["Париж"],
+                wrong: ["Лондон", "Берлин", "Рим", "Мадрид"]
+            },
+            {
+                text: "2 + 2 * 2 = ?",
+                correct: ["6"],
+                wrong: ["8", "4", "10", "0"]
+            }
+        ]
+    };
+
+    // ==========================================
+    // 2. ПЕРЕМЕННЫЕ СОСТОЯНИЯ
+    // ==========================================
+    let state = {
+        isRunning: false,
+        currentQIndex: 0,
+        lives: GAME_CONFIG.maxLives,
+        heroX: 0,
+        heroFlipped: false,
+        activeObjects: [], // { el, x, y, speed, type, data }
+        lastTime: 0,
+        spawnTimer: 0,
+        keys: { left: false, right: false }
+    };
+
+    // DOM Элементы
+    const els = {
+        container: document.getElementById('game-container'),
+        hero: document.getElementById('hero'),
+        lives: document.getElementById('lives-box'),
+        questionText: document.getElementById('question-text'),
+        progressFill: document.getElementById('progress-fill'),
+        overlays: {
+            start: document.getElementById('start-overlay'),
+            gameOver: document.getElementById('game-over-overlay'),
+            win: document.getElementById('win-overlay')
+        }
+    };
+
+    // ==========================================
+    // 3. ИНИЦИАЛИЗАЦИЯ
+    // ==========================================
+    function init() {
+        // Установка изображений из конфига
+        els.container.style.backgroundImage = `url("${GAME_CONFIG.bgImage}")`;
+        els.hero.style.backgroundImage = `url("${GAME_CONFIG.heroImage}")`;
+        
+        setupListeners();
+        resize();
+    }
+
+    function startGame() {
+        state.lives = GAME_CONFIG.maxLives;
+        state.currentQIndex = 0;
+        state.activeObjects.forEach(o => o.el.remove());
+        state.activeObjects = [];
+        state.isRunning = true;
+        state.lastTime = performance.now();
+        
+        updateUI();
+        loadQuestion(0);
+        
+        hideAllOverlays();
+        
+        // Запуск циклов
+        requestAnimationFrame(gameLoop);
+        clearInterval(state.spawnTimer);
+        state.spawnTimer = setInterval(spawnLogic, GAME_CONFIG.spawnInterval);
+    }
+
+    function loadQuestion(index) {
+        if (index >= GAME_CONFIG.questions.length) {
+            winGame();
+            return;
+        }
+        const q = GAME_CONFIG.questions[index];
+        els.questionText.textContent = q.text;
+        
+        // Анимация смены вопроса (небольшой "пуф")
+        const box = document.getElementById('question-box');
+        box.style.animation = 'none';
+        box.offsetHeight; /* trigger reflow */
+        box.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    }
+
+    // ==========================================
+    // 4. ИГРОВОЙ ЦИКЛ
+    // ==========================================
+    function gameLoop(time) {
+        if (!state.isRunning) return;
+
+        const dt = (time - state.lastTime) / 16; // Нормализация под 60fps
+        state.lastTime = time;
+
+        updateHero(dt);
+        updateObjects(dt);
+        
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Движение героя
+    function updateHero(dt) {
+        const speed = GAME_CONFIG.heroSpeed * dt;
+        const rect = els.container.getBoundingClientRect();
+        const heroW = els.hero.offsetWidth;
+
+        if (state.keys.left) {
+            state.heroX -= speed;
+            state.heroFlipped = true;
+        }
+        if (state.keys.right) {
+            state.heroX += speed;
+            state.heroFlipped = false;
+        }
+
+        // Границы
+        if (state.heroX < 0) state.heroX = 0;
+        if (state.heroX > rect.width - heroW) state.heroX = rect.width - heroW;
+
+        els.hero.style.left = state.heroX + "px";
+        // Поворот героя
+        els.hero.style.transform = `scaleX(${state.heroFlipped ? -1 : 1})`;
+    }
+
+    // Обновление падающих объектов
+    function updateObjects(dt) {
+        const gameRect = els.container.getBoundingClientRect();
+        const heroRect = els.hero.getBoundingClientRect();
+
+        // Границы коллизии героя (чуть меньше картинки для точности)
+        const hitBox = {
+            l: heroRect.left + 20,
+            r: heroRect.right - 20,
+            t: heroRect.top + 30,
+            b: heroRect.bottom
+        };
+
+        for (let i = state.activeObjects.length - 1; i >= 0; i--) {
+            const obj = state.activeObjects[i];
+            
+            // Падение
+            obj.y += obj.speed * dt;
+            obj.el.style.top = obj.y + "px";
+
+            // Проверка выхода за экран
+            if (obj.y > gameRect.height) {
+                obj.el.remove();
+                state.activeObjects.splice(i, 1);
+                continue;
+            }
+
+            // Проверка коллизии
+            const objRect = obj.el.getBoundingClientRect();
+            
+            // Простая AABB коллизия
+            if (objRect.right > hitBox.l &&
+                objRect.left < hitBox.r &&
+                objRect.bottom > hitBox.t &&
+                objRect.top < hitBox.b) {
+                
+                handleCollision(obj, i);
+            }
+        }
+    }
+
+    // ==========================================
+    // 5. ЛОГИКА СПАВНА И ВЗАИМОДЕЙСТВИЯ
+    // ==========================================
+    function spawnLogic() {
+        if (!state.isRunning) return;
+        
+        const q = GAME_CONFIG.questions[state.currentQIndex];
+        const rand = Math.random();
+        let type, text, isCorrect;
+
+        // Логика: 
+        // 10% - Бомба
+        // 40% - Правильный ответ (если его сейчас нет на экране, шанс выше)
+        // 50% - Неправильный ответ
+
+        if (rand < 0.1) {
+            type = 'bomb';
+        } else if (rand < 0.5) {
+            type = 'answer';
+            isCorrect = true;
+            // Берем случайный правильный ответ из массива
+            text = q.correct[Math.floor(Math.random() * q.correct.length)];
+        } else {
+            type = 'answer';
+            isCorrect = false;
+            // Берем случайный неправильный
+            text = q.wrong[Math.floor(Math.random() * q.wrong.length)];
+        }
+
+        createFallingObject(type, text, isCorrect);
+    }
+
+    function createFallingObject(type, text, isCorrect) {
+        const el = document.createElement('div');
+        el.classList.add('falling');
+        
+        const size = 70;
+        // Позиция X (чтобы не вылезало за края)
+        const gameW = els.container.offsetWidth;
+        const x = Math.random() * (gameW - size - 40) + 20;
+        
+        el.style.left = x + "px";
+        el.style.width = size + "px";
+        el.style.height = size + "px";
+
+        // Визуал
+        if (type === 'bomb') {
+            el.style.backgroundImage = `url("${GAME_CONFIG.bombImage}")`;
+        } else {
+            el.style.backgroundImage = `url("${isCorrect ? GAME_CONFIG.giftImageCorrect : GAME_CONFIG.giftImageWrong}")`;
+            // Добавляем текст
+            const label = document.createElement('div');
+            label.className = 'item-label';
+            label.textContent = text;
+            el.appendChild(label);
+        }
+
+        els.container.appendChild(el);
+
+        state.activeObjects.push({
+            el: el,
+            x: x,
+            y: -100,
+            speed: GAME_CONFIG.fallSpeedBase + Math.random() * 1.5,
+            type: type, // 'bomb' or 'answer'
+            isCorrect: isCorrect,
+            text: text
+        });
+    }
+
+    function handleCollision(obj, index) {
+        // Удаляем объект
+        obj.el.remove();
+        state.activeObjects.splice(index, 1);
+
+        const heroRect = els.hero.getBoundingClientRect();
+        const centerX = (heroRect.left + heroRect.width/2);
+
+        if (obj.type === 'bomb') {
+            playSound('snd-wrong'); // Звук бомбы можно отдельный
+            takeDamage();
+            shakeScreen();
+            showFloatingText("-1 ❤️", centerX, heroRect.top, "red");
+        } 
+        else if (obj.type === 'answer') {
+            if (obj.isCorrect) {
+                // ПРАВИЛЬНО
+                playSound('snd-correct');
+                showFloatingText("Верно!", centerX, heroRect.top, "#4caf50");
+                nextLevel();
+            } else {
+                // НЕПРАВИЛЬНО
+                playSound('snd-wrong');
+                takeDamage();
+                showFloatingText("Ошибка!", centerX, heroRect.top, "orange");
+            }
+        }
+    }
+
+    function nextLevel() {
+        // Очистить экран от старых предметов
+        state.activeObjects.forEach(o => {
+            createPoofEffect(o.x, o.y); // Визуальный эффект исчезновения
+            o.el.remove();
+        });
+        state.activeObjects = [];
+
+        state.currentQIndex++;
+        updateUI();
+        
+        // Если вопросы кончились
+        if (state.currentQIndex >= GAME_CONFIG.questions.length) {
+            winGame();
+        } else {
+            loadQuestion(state.currentQIndex);
+        }
+    }
+
+    function takeDamage() {
+        state.lives--;
+        updateUI();
+        if (state.lives <= 0) {
+            gameOver();
+        }
+    }
+
+    // ==========================================
+    // 6. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И UI
+    // ==========================================
+    function updateUI() {
+        // Жизни
+        let hearts = "";
+        for(let i=0; i<state.lives; i++) hearts += "❤";
+        els.lives.textContent = hearts;
+        if(state.lives < 2) els.lives.style.color = "red";
+        else els.lives.style.color = "white";
+
+        // Прогресс
+        const total = GAME_CONFIG.questions.length;
+        const pct = (state.currentQIndex / total) * 100;
+        els.progressFill.style.width = `${pct}%`;
+    }
+
+    function shakeScreen() {
+        els.container.classList.remove('shake-screen');
+        void els.container.offsetWidth; // trigger reflow
+        els.container.classList.add('shake-screen');
+    }
+
+    function showFloatingText(text, x, y, color) {
+        const el = document.createElement('div');
+        el.className = 'floating-text';
+        el.textContent = text;
+        el.style.color = color;
+        el.style.left = x + "px";
+        el.style.top = y + "px";
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+    }
+    
+    function createPoofEffect(x, y) {
+        // Можно добавить анимацию дымка при исчезновении предметов
+    }
+
+    function playSound(id) {
+        const audio = document.getElementById(id);
+        if(audio && audio.src) {
+            audio.currentTime = 0;
+            // audio.play().catch(e => console.log("Audio play failed", e));
+        }
+    }
+
+    // Управление состоянием игры
+    function gameOver() {
+        state.isRunning = false;
+        playSound('snd-lose');
+        clearInterval(state.spawnTimer);
+        els.overlays.gameOver.classList.remove('hidden');
+    }
+
+    function winGame() {
+        state.isRunning = false;
+        playSound('snd-win');
+        els.progressFill.style.width = '100%';
+        clearInterval(state.spawnTimer);
+        els.overlays.win.classList.remove('hidden');
+    }
+
+    function hideAllOverlays() {
+        Object.values(els.overlays).forEach(el => el.classList.add('hidden'));
+    }
+
+    function resize() {
+        state.heroX = (els.container.offsetWidth - 100) / 2;
+        els.hero.style.left = state.heroX + "px";
+    }
+
+    function setupListeners() {
+        window.addEventListener('resize', resize);
+        
+        // Клавиатура
+        window.addEventListener('keydown', e => {
+            if(e.code === 'ArrowLeft' || e.code === 'KeyA') state.keys.left = true;
+            if(e.code === 'ArrowRight' || e.code === 'KeyD') state.keys.right = true;
+        });
+        window.addEventListener('keyup', e => {
+            if(e.code === 'ArrowLeft' || e.code === 'KeyA') state.keys.left = false;
+            if(e.code === 'ArrowRight' || e.code === 'KeyD') state.keys.right = false;
+        });
+
+        // Кнопки меню
+        document.getElementById('btn-start').addEventListener('click', startGame);
+        document.getElementById('btn-retry').addEventListener('click', startGame);
+        document.getElementById('btn-restart').addEventListener('click', startGame);
+    }
+
+    // Старт
+    init();
+
+</script>
+</body>
+</html>

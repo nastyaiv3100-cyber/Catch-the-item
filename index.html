@@ -2,135 +2,106 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Falling Objects Quiz (Red Hearts)</title>
+    <title>Falling Objects Quiz (Animated Hearts)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- ОСНОВНЫЕ СТИЛИ --- */
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         
-        /* Прозрачный фон для наложения в Genially */
         html, body { 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
+            width: 100%; height: 100%; overflow: hidden; 
             background: transparent; 
             font-family: "Roboto Condensed", sans-serif; 
         }
-        
         #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background: transparent;
+            position: relative; width: 100vw; height: 100vh;
+            overflow: hidden; background: transparent;
         }
 
         /* --- ИНТЕРФЕЙС (UI) --- */
         #ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%;
-            padding: 15px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            position: absolute; top: 0; left: 0; width: 100%; padding: 15px;
+            z-index: 10; display: flex; flex-direction: column; gap: 10px;
             pointer-events: none; 
         }
-
-        /* Прогресс бар */
         .progress-container {
-            width: 100%;
-            max-width: 600px;
-            height: 20px;
-            background: rgba(0,0,0,0.5);
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            border-radius: 10px;
-            margin: 0 auto;
-            overflow: hidden;
-            position: relative;
+            width: 100%; max-width: 600px; height: 20px;
+            background: rgba(0,0,0,0.5); border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 10px; margin: 0 auto; overflow: hidden; position: relative;
         }
         .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ffd700, #ffa500);
-            width: 0%;
-            transition: width 0.5s ease;
+            height: 100%; background: linear-gradient(90deg, #ffd700, #ffa500);
+            width: 0%; transition: width 0.5s ease;
         }
-
-        /* Блок с вопросом */
         #question-box {
-            background: rgba(255, 255, 255, 0.95);
-            border: 3px solid #ffcc00;
-            border-radius: 15px;
-            padding: 15px 20px;
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            pointer-events: auto; 
+            background: rgba(255, 255, 255, 0.95); border: 3px solid #ffcc00;
+            border-radius: 15px; padding: 15px 20px; text-align: center;
+            max-width: 800px; margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); pointer-events: auto; 
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #question-text {
-            font-size: 24px;
-            color: #333;
-            font-weight: bold;
+        #question-text { font-size: 24px; color: #333; font-weight: bold; }
+
+        /* --- ЖИЗНИ И АНИМАЦИЯ РАЗБИВАНИЯ (НОВОЕ) --- */
+        #lives-box {
+            position: absolute; top: 20px; right: 20px;
+            /* Контейнер теперь флекс, чтобы сердечки стояли в ряд */
+            display: flex; gap: 5px;
+            pointer-events: none;
         }
 
-        /* Жизни (ИЗМЕНЕНО) */
-        #lives-box {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 50px; /* Было 30px, стало крупнее */
-            color: #ff0000;    /* Ярко-красный цвет */
-            /* Тень/Обводка чтобы было видно на любом фоне */
+        /* Стиль отдельного сердечка */
+        .heart {
+            font-size: 50px;
+            color: #ff0000;
             text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-            letter-spacing: 5px; /* Чуть раздвинул сердечки */
+            display: inline-block;
+            transition: transform 0.3s ease;
         }
+
+        /* Анимация разбивания и испарения */
+        @keyframes heartBreakAnim {
+            0% { transform: scale(1); opacity: 1; }
+            20% { transform: scale(1.2) rotate(-15deg); color: #ff6b6b; } /* Дрогнуло и посветлело */
+            40% { transform: scale(0.9) rotate(10deg); } /* Сжалось */
+            100% { 
+                transform: translateY(-80px) scale(1.5) rotate(-30deg); /* Улетает вверх, увеличиваясь и вращаясь */
+                opacity: 0; /* Исчезает */
+                filter: blur(5px); /* Размывается */
+            }
+        }
+
+        /* Класс, который запускает анимацию */
+        .heart.broken {
+            animation: heartBreakAnim 0.8s forwards ease-out;
+            /* Важно: чтобы улетающее сердце не перекрывало интерфейс */
+            z-index: 100; 
+            position: relative;
+        }
+
 
         /* --- ИГРОВЫЕ ЭЛЕМЕНТЫ --- */
         #hero {
-            position: absolute;
-            bottom: 30px;
-            width: 100px; 
-            height: 130px;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain;
+            position: absolute; bottom: 30px; width: 100px; height: 130px;
+            background-repeat: no-repeat; background-position: center; background-size: contain;
             background-image: url("https://i.postimg.cc/V6FvXj9M/grinc-kopia.png");
-            transform-origin: center bottom;
-            transition: transform 0.1s linear;
-            z-index: 5;
+            transform-origin: center bottom; transition: transform 0.1s linear; z-index: 5;
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
-
         .falling {
-            position: absolute;
-            top: -100px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            will-change: top;
-            z-index: 4;
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            position: absolute; top: -100px; display: flex;
+            justify-content: center; align-items: center; background-size: contain;
+            background-repeat: no-repeat; background-position: center; will-change: top;
+            z-index: 4; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
         }
-        
         .item-label {
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 18px;
-            font-weight: bold;
-            white-space: nowrap;
-            margin-top: -60px; 
-            text-shadow: 0 0 2px black;
+            background: rgba(0,0,0,0.8); color: white; padding: 4px 8px;
+            border-radius: 4px; font-size: 18px; font-weight: bold; white-space: nowrap;
+            margin-top: -60px; text-shadow: 0 0 2px black;
             border: 1px solid rgba(255,255,255,0.3);
         }
 
-        /* Эффект тряски */
+        /* Эффекты и Overlays */
         @keyframes shakeAnim {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -144,61 +115,39 @@
             90% { transform: translate(1px, 2px) rotate(0deg); }
             100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
-        .shake-screen {
-            animation: shakeAnim 0.5s;
-        }
+        .shake-screen { animation: shakeAnim 0.5s; }
 
-        /* --- OVERLAYS --- */
         .overlay {
-            position: absolute; inset: 0;
-            background: rgba(0,0,0,0.7); 
+            position: absolute; inset: 0; background: rgba(0,0,0,0.7); 
             display: flex; align-items: center; justify-content: center;
-            z-index: 20;
-            opacity: 1; transition: opacity 0.3s;
+            z-index: 20; opacity: 1; transition: opacity 0.3s;
         }
         .overlay.hidden { opacity: 0; pointer-events: none; }
         
         .modal {
-            background: #fff;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 400px;
-            border: 4px solid #ffcc00;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            background: #fff; padding: 30px; border-radius: 20px; text-align: center;
+            max-width: 400px; border: 4px solid #ffcc00; box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
         .modal h1 { color: #333; margin-bottom: 10px; }
         .modal p { color: #555; font-size: 18px; margin-bottom: 20px; }
         
         button.btn-primary {
             background: linear-gradient(to bottom, #ffcc00, #ff9900);
-            border: none;
-            padding: 12px 30px;
-            font-size: 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
+            border: none; padding: 12px 30px; font-size: 20px; border-radius: 30px;
+            cursor: pointer; font-weight: bold; color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3); transition: transform 0.1s;
         }
         button.btn-primary:active { transform: scale(0.95); }
 
-        /* Всплывающие очки */
         .floating-text {
-            position: absolute;
-            font-weight: bold;
-            font-size: 24px;
-            pointer-events: none;
-            animation: floatUp 1s forwards;
-            z-index: 15;
+            position: absolute; font-weight: bold; font-size: 24px;
+            pointer-events: none; animation: floatUp 1s forwards; z-index: 15;
             text-shadow: 2px 2px 0 #000;
         }
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-50px); }
         }
-        
         @keyframes popIn {
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
@@ -208,12 +157,11 @@
 <body>
 
 <div id="game-container">
-    
     <div id="ui-layer">
         <div class="progress-container">
             <div id="progress-fill" class="progress-fill"></div>
         </div>
-        <div id="lives-box">❤❤❤</div>
+        <div id="lives-box"></div>
         <div id="question-box">
             <div id="question-text">Загрузка...</div>
         </div>
@@ -260,29 +208,11 @@
         bombImage: "https://i.postimg.cc/tCfZ91wG/3.png",
         giftImageCorrect: "https://i.postimg.cc/RCGR6kpR/podarok-dudl.png",
         giftImageWrong: "https://i.postimg.cc/fbtxnZY7/1.png",
-        
-        heroSpeed: 6,       
-        fallSpeedBase: 2,   
-        spawnInterval: 900, 
-        
-        maxLives: 3,
-        
+        heroSpeed: 6, fallSpeedBase: 2, spawnInterval: 900, maxLives: 3,
         questions: [
-            {
-                text: "Какой сейчас год?",
-                correct: ["2026"],
-                wrong: ["2025", "2024", "1999", "3000"]
-            },
-            {
-                text: "Столица Франции?",
-                correct: ["Париж"],
-                wrong: ["Лондон", "Берлин", "Рим", "Мадрид"]
-            },
-            {
-                text: "2 + 2 * 2 = ?",
-                correct: ["6"],
-                wrong: ["8", "4", "10", "0"]
-            }
+            { text: "Какой сейчас год?", correct: ["2026"], wrong: ["2025", "2024", "1999", "3000"] },
+            { text: "Столица Франции?", correct: ["Париж"], wrong: ["Лондон", "Берлин", "Рим", "Мадрид"] },
+            { text: "2 + 2 * 2 = ?", correct: ["6"], wrong: ["8", "4", "10", "0"] }
         ]
     };
 
@@ -290,21 +220,15 @@
     // 2. ПЕРЕМЕННЫЕ СОСТОЯНИЯ
     // ==========================================
     let state = {
-        isRunning: false,
-        currentQIndex: 0,
-        lives: GAME_CONFIG.maxLives,
-        heroX: 0,
-        heroFlipped: false,
-        activeObjects: [], 
-        lastTime: 0,
-        spawnTimer: 0,
-        keys: { left: false, right: false }
+        isRunning: false, currentQIndex: 0, lives: GAME_CONFIG.maxLives,
+        heroX: 0, heroFlipped: false, activeObjects: [], lastTime: 0,
+        spawnTimer: 0, keys: { left: false, right: false }
     };
 
     const els = {
         container: document.getElementById('game-container'),
         hero: document.getElementById('hero'),
-        lives: document.getElementById('lives-box'),
+        livesContainer: document.getElementById('lives-box'), // Изменено имя переменной
         questionText: document.getElementById('question-text'),
         progressFill: document.getElementById('progress-fill'),
         overlays: {
@@ -321,6 +245,8 @@
         els.hero.style.backgroundImage = `url("${GAME_CONFIG.heroImage}")`;
         setupListeners();
         resize();
+        // Предварительная отрисовка жизней (полные) при загрузке
+        updateUI(true); 
     }
 
     function startGame() {
@@ -331,9 +257,9 @@
         state.isRunning = true;
         state.lastTime = performance.now();
         
-        updateUI();
+        // Сброс и полная перерисовка жизней при старте
+        updateUI(true); 
         loadQuestion(0);
-        
         hideAllOverlays();
         
         requestAnimationFrame(gameLoop);
@@ -342,248 +268,166 @@
     }
 
     function loadQuestion(index) {
-        if (index >= GAME_CONFIG.questions.length) {
-            winGame();
-            return;
-        }
+        if (index >= GAME_CONFIG.questions.length) { winGame(); return; }
         const q = GAME_CONFIG.questions[index];
         els.questionText.textContent = q.text;
-        
         const box = document.getElementById('question-box');
-        box.style.animation = 'none';
-        box.offsetHeight; 
+        box.style.animation = 'none'; box.offsetHeight; 
         box.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
     }
 
     // ==========================================
-    // 4. ИГРОВОЙ ЦИКЛ
+    // 4. ИГРОВОЙ ЦИКЛ (Без изменений)
     // ==========================================
     function gameLoop(time) {
         if (!state.isRunning) return;
-        const dt = (time - state.lastTime) / 16; 
-        state.lastTime = time;
-        updateHero(dt);
-        updateObjects(dt);
+        const dt = (time - state.lastTime) / 16; state.lastTime = time;
+        updateHero(dt); updateObjects(dt);
         requestAnimationFrame(gameLoop);
     }
-
     function updateHero(dt) {
         const speed = GAME_CONFIG.heroSpeed * dt;
         const rect = els.container.getBoundingClientRect();
         const heroW = els.hero.offsetWidth;
-
-        if (state.keys.left) {
-            state.heroX -= speed;
-            state.heroFlipped = true;
-        }
-        if (state.keys.right) {
-            state.heroX += speed;
-            state.heroFlipped = false;
-        }
-
+        if (state.keys.left) { state.heroX -= speed; state.heroFlipped = true; }
+        if (state.keys.right) { state.heroX += speed; state.heroFlipped = false; }
         if (state.heroX < 0) state.heroX = 0;
         if (state.heroX > rect.width - heroW) state.heroX = rect.width - heroW;
-
         els.hero.style.left = state.heroX + "px";
         els.hero.style.transform = `scaleX(${state.heroFlipped ? -1 : 1})`;
     }
-
     function updateObjects(dt) {
         const gameRect = els.container.getBoundingClientRect();
         const heroRect = els.hero.getBoundingClientRect();
-        const hitBox = {
-            l: heroRect.left + 20,
-            r: heroRect.right - 20,
-            t: heroRect.top + 30,
-            b: heroRect.bottom
-        };
-
+        const hitBox = { l: heroRect.left + 20, r: heroRect.right - 20, t: heroRect.top + 30, b: heroRect.bottom };
         for (let i = state.activeObjects.length - 1; i >= 0; i--) {
             const obj = state.activeObjects[i];
-            obj.y += obj.speed * dt;
-            obj.el.style.top = obj.y + "px";
-
-            if (obj.y > gameRect.height) {
-                obj.el.remove();
-                state.activeObjects.splice(i, 1);
-                continue;
-            }
-
+            obj.y += obj.speed * dt; obj.el.style.top = obj.y + "px";
+            if (obj.y > gameRect.height) { obj.el.remove(); state.activeObjects.splice(i, 1); continue; }
             const objRect = obj.el.getBoundingClientRect();
-            if (objRect.right > hitBox.l &&
-                objRect.left < hitBox.r &&
-                objRect.bottom > hitBox.t &&
-                objRect.top < hitBox.b) {
+            if (objRect.right > hitBox.l && objRect.left < hitBox.r && objRect.bottom > hitBox.t && objRect.top < hitBox.b) {
                 handleCollision(obj, i);
             }
         }
     }
 
     // ==========================================
-    // 5. ЛОГИКА
+    // 5. ЛОГИКА (Без изменений)
     // ==========================================
     function spawnLogic() {
         if (!state.isRunning) return;
-        
         const q = GAME_CONFIG.questions[state.currentQIndex];
         const rand = Math.random();
         let type, text, isCorrect;
-
-        if (rand < 0.1) {
-            type = 'bomb';
-        } else if (rand < 0.5) {
-            type = 'answer';
-            isCorrect = true;
-            text = q.correct[Math.floor(Math.random() * q.correct.length)];
-        } else {
-            type = 'answer';
-            isCorrect = false;
-            text = q.wrong[Math.floor(Math.random() * q.wrong.length)];
-        }
+        if (rand < 0.1) { type = 'bomb'; } 
+        else if (rand < 0.5) { type = 'answer'; isCorrect = true; text = q.correct[Math.floor(Math.random() * q.correct.length)]; } 
+        else { type = 'answer'; isCorrect = false; text = q.wrong[Math.floor(Math.random() * q.wrong.length)]; }
         createFallingObject(type, text, isCorrect);
     }
-
     function createFallingObject(type, text, isCorrect) {
-        const el = document.createElement('div');
-        el.classList.add('falling');
-        const size = 70;
-        const gameW = els.container.offsetWidth;
+        const el = document.createElement('div'); el.classList.add('falling');
+        const size = 70; const gameW = els.container.offsetWidth;
         const x = Math.random() * (gameW - size - 40) + 20;
-        
-        el.style.left = x + "px";
-        el.style.width = size + "px";
-        el.style.height = size + "px";
-
-        if (type === 'bomb') {
-            el.style.backgroundImage = `url("${GAME_CONFIG.bombImage}")`;
-        } else {
+        el.style.left = x + "px"; el.style.width = size + "px"; el.style.height = size + "px";
+        if (type === 'bomb') { el.style.backgroundImage = `url("${GAME_CONFIG.bombImage}")`; } 
+        else {
             el.style.backgroundImage = `url("${isCorrect ? GAME_CONFIG.giftImageCorrect : GAME_CONFIG.giftImageWrong}")`;
-            const label = document.createElement('div');
-            label.className = 'item-label';
-            label.textContent = text;
-            el.appendChild(label);
+            const label = document.createElement('div'); label.className = 'item-label'; label.textContent = text; el.appendChild(label);
         }
         els.container.appendChild(el);
-        state.activeObjects.push({
-            el: el,
-            x: x,
-            y: -100,
-            speed: GAME_CONFIG.fallSpeedBase + Math.random() * 1.5,
-            type: type, 
-            isCorrect: isCorrect,
-            text: text
-        });
+        state.activeObjects.push({ el: el, x: x, y: -100, speed: GAME_CONFIG.fallSpeedBase + Math.random() * 1.5, type: type, isCorrect: isCorrect, text: text });
     }
-
     function handleCollision(obj, index) {
-        obj.el.remove();
-        state.activeObjects.splice(index, 1);
-        const heroRect = els.hero.getBoundingClientRect();
-        const centerX = (heroRect.left + heroRect.width/2);
-
+        obj.el.remove(); state.activeObjects.splice(index, 1);
+        const heroRect = els.hero.getBoundingClientRect(); const centerX = (heroRect.left + heroRect.width/2);
         if (obj.type === 'bomb') {
-            playSound('snd-wrong'); 
-            takeDamage();
-            shakeScreen();
+            playSound('snd-wrong'); takeDamage(); shakeScreen();
             showFloatingText("-1 ❤️", centerX, heroRect.top, "red");
-        } 
-        else if (obj.type === 'answer') {
-            if (obj.isCorrect) {
-                playSound('snd-correct');
-                showFloatingText("Верно!", centerX, heroRect.top, "#4caf50");
-                nextLevel();
-            } else {
-                playSound('snd-wrong');
-                takeDamage();
-                showFloatingText("Ошибка!", centerX, heroRect.top, "orange");
-            }
+        } else if (obj.type === 'answer') {
+            if (obj.isCorrect) { playSound('snd-correct'); showFloatingText("Верно!", centerX, heroRect.top, "#4caf50"); nextLevel(); } 
+            else { playSound('snd-wrong'); takeDamage(); showFloatingText("Ошибка!", centerX, heroRect.top, "orange"); }
         }
     }
-
     function nextLevel() {
-        state.activeObjects.forEach(o => { o.el.remove(); });
-        state.activeObjects = [];
-        state.currentQIndex++;
-        updateUI();
-        
-        if (state.currentQIndex >= GAME_CONFIG.questions.length) {
-            winGame();
-        } else {
-            loadQuestion(state.currentQIndex);
-        }
+        state.activeObjects.forEach(o => { o.el.remove(); }); state.activeObjects = [];
+        state.currentQIndex++; updateUI();
+        if (state.currentQIndex >= GAME_CONFIG.questions.length) { winGame(); } else { loadQuestion(state.currentQIndex); }
     }
-
     function takeDamage() {
         state.lives--;
-        updateUI();
-        if (state.lives <= 0) {
-            gameOver();
-        }
+        updateUI(); // Вызываем обновление UI, которое запустит анимацию
+        if (state.lives <= 0) { gameOver(); }
     }
 
     // ==========================================
-    // 6. ВСПОМОГАТЕЛЬНЫЕ
+    // 6. ВСПОМОГАТЕЛЬНЫЕ (ИЗМЕНЕНА updateUI)
     // ==========================================
-    function updateUI() {
-        // Убрал смену цвета, теперь всегда красный
-        let hearts = "";
-        for(let i=0; i<state.lives; i++) hearts += "❤";
-        els.lives.textContent = hearts;
+    
+    // Функция обновления интерфейса (Жизни + Прогресс)
+    // reset = true используется при старте игры для полной перерисовки
+    function updateUI(reset = false) {
+        const container = els.livesContainer;
         
+        if (reset) {
+            // Полная очистка и создание заново (для старта игры)
+            container.innerHTML = '';
+            for (let i = 0; i < state.lives; i++) {
+                const heart = document.createElement('span');
+                heart.className = 'heart';
+                heart.textContent = '❤';
+                container.appendChild(heart);
+            }
+        } else {
+            // Умное обновление (для анимации потери жизни)
+            const currentHearts = container.querySelectorAll('.heart:not(.broken)');
+            const count = currentHearts.length;
+            const targetCount = state.lives;
+
+            if (count > targetCount) {
+                const heartsToRemove = count - targetCount;
+                // Берем последние "живые" сердца в списке
+                for (let i = 0; i < heartsToRemove; i++) {
+                    const heartToBreak = currentHearts[count - 1 - i];
+                    if (heartToBreak) {
+                        heartToBreak.classList.add('broken');
+                        // Удаляем элемент из DOM после окончания анимации
+                        heartToBreak.addEventListener('animationend', () => {
+                            heartToBreak.remove();
+                        }, {once: true});
+                    }
+                }
+            }
+        }
+
+        // Обновление прогресс-бара (без изменений)
         const total = GAME_CONFIG.questions.length;
-        const pct = (state.currentQIndex / total) * 100;
+        const pct = total > 0 ? (state.currentQIndex / total) * 100 : 0;
         els.progressFill.style.width = `${pct}%`;
     }
 
     function shakeScreen() {
-        els.container.classList.remove('shake-screen');
-        void els.container.offsetWidth; 
+        els.container.classList.remove('shake-screen'); void els.container.offsetWidth; 
         els.container.classList.add('shake-screen');
     }
-
     function showFloatingText(text, x, y, color) {
-        const el = document.createElement('div');
-        el.className = 'floating-text';
-        el.textContent = text;
-        el.style.color = color;
-        el.style.left = x + "px";
-        el.style.top = y + "px";
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1000);
+        const el = document.createElement('div'); el.className = 'floating-text';
+        el.textContent = text; el.style.color = color; el.style.left = x + "px"; el.style.top = y + "px";
+        document.body.appendChild(el); setTimeout(() => el.remove(), 1000);
     }
-    
     function playSound(id) {
-        const audio = document.getElementById(id);
-        if(audio && audio.src) {
-            audio.currentTime = 0;
-            // audio.play().catch(e => console.log("Audio play failed", e));
-        }
+        const audio = document.getElementById(id); if(audio && audio.src) { audio.currentTime = 0; }
     }
-
     function gameOver() {
-        state.isRunning = false;
-        playSound('snd-lose');
-        clearInterval(state.spawnTimer);
+        state.isRunning = false; playSound('snd-lose'); clearInterval(state.spawnTimer);
         els.overlays.gameOver.classList.remove('hidden');
     }
-
     function winGame() {
-        state.isRunning = false;
-        playSound('snd-win');
-        els.progressFill.style.width = '100%';
-        clearInterval(state.spawnTimer);
+        state.isRunning = false; playSound('snd-win');
+        els.progressFill.style.width = '100%'; clearInterval(state.spawnTimer);
         els.overlays.win.classList.remove('hidden');
     }
-
-    function hideAllOverlays() {
-        Object.values(els.overlays).forEach(el => el.classList.add('hidden'));
-    }
-
-    function resize() {
-        state.heroX = (els.container.offsetWidth - 100) / 2;
-        els.hero.style.left = state.heroX + "px";
-    }
-
+    function hideAllOverlays() { Object.values(els.overlays).forEach(el => el.classList.add('hidden')); }
+    function resize() { state.heroX = (els.container.offsetWidth - 100) / 2; els.hero.style.left = state.heroX + "px"; }
     function setupListeners() {
         window.addEventListener('resize', resize);
         window.addEventListener('keydown', e => {

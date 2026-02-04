@@ -2,18 +2,18 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Falling Objects Quiz (Transparent)</title>
+    <title>Falling Objects Quiz (Red Hearts)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- ОСНОВНЫЕ СТИЛИ --- */
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         
-        /* ВАЖНО: Делаем фон прозрачным для наложения в Genially */
+        /* Прозрачный фон для наложения в Genially */
         html, body { 
             width: 100%; 
             height: 100%; 
             overflow: hidden; 
-            background: transparent; /* Прозрачный фон */
+            background: transparent; 
             font-family: "Roboto Condensed", sans-serif; 
         }
         
@@ -22,7 +22,7 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            background: transparent; /* Убрали картинку, теперь тут пусто */
+            background: transparent;
         }
 
         /* --- ИНТЕРФЕЙС (UI) --- */
@@ -66,7 +66,7 @@
             max-width: 800px;
             margin: 0 auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            pointer-events: auto; /* Чтобы можно было выделить текст если надо, но вообще игра на кликах */
+            pointer-events: auto; 
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #question-text {
@@ -75,15 +75,16 @@
             font-weight: bold;
         }
 
-        /* Жизни */
+        /* Жизни (ИЗМЕНЕНО) */
         #lives-box {
             position: absolute;
             top: 20px;
             right: 20px;
-            font-size: 30px;
-            /* Тень чтобы было видно на любом фоне учителя */
-            text-shadow: 0 0 3px #000, 0 0 5px #000; 
-            color: #fff;
+            font-size: 50px; /* Было 30px, стало крупнее */
+            color: #ff0000;    /* Ярко-красный цвет */
+            /* Тень/Обводка чтобы было видно на любом фоне */
+            text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            letter-spacing: 5px; /* Чуть раздвинул сердечки */
         }
 
         /* --- ИГРОВЫЕ ЭЛЕМЕНТЫ --- */
@@ -99,7 +100,6 @@
             transform-origin: center bottom;
             transition: transform 0.1s linear;
             z-index: 5;
-            /* Добавим легкую тень герою, чтобы не сливался с фоном */
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
 
@@ -114,7 +114,6 @@
             background-position: center;
             will-change: top;
             z-index: 4;
-            /* Тень падающим предметам */
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
         }
         
@@ -149,8 +148,7 @@
             animation: shakeAnim 0.5s;
         }
 
-        /* --- OVERLAYS (Модальные окна) --- */
-        /* Фон модальных окон оставим полупрозрачным черным, чтобы текст читался */
+        /* --- OVERLAYS --- */
         .overlay {
             position: absolute; inset: 0;
             background: rgba(0,0,0,0.7); 
@@ -194,7 +192,7 @@
             pointer-events: none;
             animation: floatUp 1s forwards;
             z-index: 15;
-            text-shadow: 2px 2px 0 #000; /* Контур текста */
+            text-shadow: 2px 2px 0 #000;
         }
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0); }
@@ -259,7 +257,6 @@
     // ==========================================
     const GAME_CONFIG = {
         heroImage: "https://i.postimg.cc/V6FvXj9M/grinc-kopia.png",
-        // bgImage удален, чтобы был прозрачный фон
         bombImage: "https://i.postimg.cc/tCfZ91wG/3.png",
         giftImageCorrect: "https://i.postimg.cc/RCGR6kpR/podarok-dudl.png",
         giftImageWrong: "https://i.postimg.cc/fbtxnZY7/1.png",
@@ -270,7 +267,6 @@
         
         maxLives: 3,
         
-        // Пример данных (будут заменяться из редактора)
         questions: [
             {
                 text: "Какой сейчас год?",
@@ -322,9 +318,7 @@
     // 3. ИНИЦИАЛИЗАЦИЯ
     // ==========================================
     function init() {
-        // Убрали установку backgroundImage
         els.hero.style.backgroundImage = `url("${GAME_CONFIG.heroImage}")`;
-        
         setupListeners();
         resize();
     }
@@ -366,13 +360,10 @@
     // ==========================================
     function gameLoop(time) {
         if (!state.isRunning) return;
-
         const dt = (time - state.lastTime) / 16; 
         state.lastTime = time;
-
         updateHero(dt);
         updateObjects(dt);
-        
         requestAnimationFrame(gameLoop);
     }
 
@@ -400,7 +391,6 @@
     function updateObjects(dt) {
         const gameRect = els.container.getBoundingClientRect();
         const heroRect = els.hero.getBoundingClientRect();
-
         const hitBox = {
             l: heroRect.left + 20,
             r: heroRect.right - 20,
@@ -410,7 +400,6 @@
 
         for (let i = state.activeObjects.length - 1; i >= 0; i--) {
             const obj = state.activeObjects[i];
-            
             obj.y += obj.speed * dt;
             obj.el.style.top = obj.y + "px";
 
@@ -421,12 +410,10 @@
             }
 
             const objRect = obj.el.getBoundingClientRect();
-            
             if (objRect.right > hitBox.l &&
                 objRect.left < hitBox.r &&
                 objRect.bottom > hitBox.t &&
                 objRect.top < hitBox.b) {
-                
                 handleCollision(obj, i);
             }
         }
@@ -453,14 +440,12 @@
             isCorrect = false;
             text = q.wrong[Math.floor(Math.random() * q.wrong.length)];
         }
-
         createFallingObject(type, text, isCorrect);
     }
 
     function createFallingObject(type, text, isCorrect) {
         const el = document.createElement('div');
         el.classList.add('falling');
-        
         const size = 70;
         const gameW = els.container.offsetWidth;
         const x = Math.random() * (gameW - size - 40) + 20;
@@ -478,9 +463,7 @@
             label.textContent = text;
             el.appendChild(label);
         }
-
         els.container.appendChild(el);
-
         state.activeObjects.push({
             el: el,
             x: x,
@@ -495,7 +478,6 @@
     function handleCollision(obj, index) {
         obj.el.remove();
         state.activeObjects.splice(index, 1);
-
         const heroRect = els.hero.getBoundingClientRect();
         const centerX = (heroRect.left + heroRect.width/2);
 
@@ -519,11 +501,8 @@
     }
 
     function nextLevel() {
-        state.activeObjects.forEach(o => {
-            o.el.remove();
-        });
+        state.activeObjects.forEach(o => { o.el.remove(); });
         state.activeObjects = [];
-
         state.currentQIndex++;
         updateUI();
         
@@ -546,12 +525,11 @@
     // 6. ВСПОМОГАТЕЛЬНЫЕ
     // ==========================================
     function updateUI() {
+        // Убрал смену цвета, теперь всегда красный
         let hearts = "";
         for(let i=0; i<state.lives; i++) hearts += "❤";
         els.lives.textContent = hearts;
-        if(state.lives < 2) els.lives.style.color = "red";
-        else els.lives.style.color = "white";
-
+        
         const total = GAME_CONFIG.questions.length;
         const pct = (state.currentQIndex / total) * 100;
         els.progressFill.style.width = `${pct}%`;
@@ -608,7 +586,6 @@
 
     function setupListeners() {
         window.addEventListener('resize', resize);
-        
         window.addEventListener('keydown', e => {
             if(e.code === 'ArrowLeft' || e.code === 'KeyA') state.keys.left = true;
             if(e.code === 'ArrowRight' || e.code === 'KeyD') state.keys.right = true;
@@ -617,14 +594,12 @@
             if(e.code === 'ArrowLeft' || e.code === 'KeyA') state.keys.left = false;
             if(e.code === 'ArrowRight' || e.code === 'KeyD') state.keys.right = false;
         });
-
         document.getElementById('btn-start').addEventListener('click', startGame);
         document.getElementById('btn-retry').addEventListener('click', startGame);
         document.getElementById('btn-restart').addEventListener('click', startGame);
     }
 
     init();
-
 </script>
 </body>
 </html>

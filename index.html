@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Falling Objects Quiz (Animated Hearts)</title>
+    <title>Falling Objects Quiz (Custom Heart)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- ОСНОВНЫЕ СТИЛИ --- */
@@ -42,43 +42,45 @@
         }
         #question-text { font-size: 24px; color: #333; font-weight: bold; }
 
-        /* --- ЖИЗНИ И АНИМАЦИЯ РАЗБИВАНИЯ (НОВОЕ) --- */
+        /* --- ЖИЗНИ (Ваше сердце) --- */
         #lives-box {
             position: absolute; top: 20px; right: 20px;
-            /* Контейнер теперь флекс, чтобы сердечки стояли в ряд */
-            display: flex; gap: 5px;
+            display: flex; gap: 10px; 
             pointer-events: none;
         }
 
         /* Стиль отдельного сердечка */
         .heart {
-            font-size: 50px;
-            color: #ff0000;
-            text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            width: 50px;  /* Размер сердца */
+            height: 50px; 
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
             display: inline-block;
             transition: transform 0.3s ease;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); /* Тень */
         }
 
-        /* Анимация разбивания и испарения */
+        /* Анимация разбивания */
         @keyframes heartBreakAnim {
-            0% { transform: scale(1); opacity: 1; }
-            20% { transform: scale(1.2) rotate(-15deg); color: #ff6b6b; } /* Дрогнуло и посветлело */
-            40% { transform: scale(0.9) rotate(10deg); } /* Сжалось */
+            0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+            20% { 
+                transform: scale(1.2) rotate(-15deg); 
+                filter: brightness(10) sepia(1); /* Яркая вспышка */
+            } 
+            40% { transform: scale(0.9) rotate(10deg); filter: brightness(1); }
             100% { 
-                transform: translateY(-80px) scale(1.5) rotate(-30deg); /* Улетает вверх, увеличиваясь и вращаясь */
-                opacity: 0; /* Исчезает */
-                filter: blur(5px); /* Размывается */
+                transform: translateY(-80px) scale(1.5) rotate(-30deg); 
+                opacity: 0; 
+                filter: blur(5px) grayscale(1); /* Исчезает и сереет */
             }
         }
 
-        /* Класс, который запускает анимацию */
         .heart.broken {
             animation: heartBreakAnim 0.8s forwards ease-out;
-            /* Важно: чтобы улетающее сердце не перекрывало интерфейс */
             z-index: 100; 
             position: relative;
         }
-
 
         /* --- ИГРОВЫЕ ЭЛЕМЕНТЫ --- */
         #hero {
@@ -101,7 +103,7 @@
             border: 1px solid rgba(255,255,255,0.3);
         }
 
-        /* Эффекты и Overlays */
+        /* Эффекты */
         @keyframes shakeAnim {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -166,25 +168,22 @@
             <div id="question-text">Загрузка...</div>
         </div>
     </div>
-
     <div id="hero"></div>
 
     <div id="start-overlay" class="overlay">
         <div class="modal">
             <h1>Падающие предметы</h1>
-            <p>Лови правильные ответы, избегай бомб и ошибок!</p>
+            <p>Лови правильные ответы, избегай бомб!</p>
             <button class="btn-primary" id="btn-start">ИГРАТЬ</button>
         </div>
     </div>
-
     <div id="game-over-overlay" class="overlay hidden">
         <div class="modal">
             <h1 style="color: #d9534f;">Ой!</h1>
             <p>Жизни закончились.</p>
-            <button class="btn-primary" id="btn-retry">ПОПРОБОВАТЬ СНОВА</button>
+            <button class="btn-primary" id="btn-retry">ЕЩЕ РАЗ</button>
         </div>
     </div>
-
     <div id="win-overlay" class="overlay hidden">
         <div class="modal">
             <h1 style="color: #5cb85c;">Победа!</h1>
@@ -204,21 +203,23 @@
     // 1. КОНФИГУРАЦИЯ
     // ==========================================
     const GAME_CONFIG = {
+        // Ваше изображение сердца:
+        lifeImage: "https://img.genially.com/684ea2da1b51060014c50e97/66654779-9941-4a6a-bfed-53d1fab8862f.png", 
+        
         heroImage: "https://i.postimg.cc/V6FvXj9M/grinc-kopia.png",
         bombImage: "https://i.postimg.cc/tCfZ91wG/3.png",
         giftImageCorrect: "https://i.postimg.cc/RCGR6kpR/podarok-dudl.png",
         giftImageWrong: "https://i.postimg.cc/fbtxnZY7/1.png",
+        
         heroSpeed: 6, fallSpeedBase: 2, spawnInterval: 900, maxLives: 3,
+        
         questions: [
-            { text: "Какой сейчас год?", correct: ["2026"], wrong: ["2025", "2024", "1999", "3000"] },
-            { text: "Столица Франции?", correct: ["Париж"], wrong: ["Лондон", "Берлин", "Рим", "Мадрид"] },
-            { text: "2 + 2 * 2 = ?", correct: ["6"], wrong: ["8", "4", "10", "0"] }
+            { text: "Какой сейчас год?", correct: ["2026"], wrong: ["2025", "2024", "1999"] },
+            { text: "Столица Франции?", correct: ["Париж"], wrong: ["Лондон", "Берлин", "Рим"] },
+            { text: "2 + 2 * 2 = ?", correct: ["6"], wrong: ["8", "4", "10"] }
         ]
     };
 
-    // ==========================================
-    // 2. ПЕРЕМЕННЫЕ СОСТОЯНИЯ
-    // ==========================================
     let state = {
         isRunning: false, currentQIndex: 0, lives: GAME_CONFIG.maxLives,
         heroX: 0, heroFlipped: false, activeObjects: [], lastTime: 0,
@@ -228,7 +229,7 @@
     const els = {
         container: document.getElementById('game-container'),
         hero: document.getElementById('hero'),
-        livesContainer: document.getElementById('lives-box'), // Изменено имя переменной
+        livesContainer: document.getElementById('lives-box'),
         questionText: document.getElementById('question-text'),
         progressFill: document.getElementById('progress-fill'),
         overlays: {
@@ -238,14 +239,10 @@
         }
     };
 
-    // ==========================================
-    // 3. ИНИЦИАЛИЗАЦИЯ
-    // ==========================================
     function init() {
         els.hero.style.backgroundImage = `url("${GAME_CONFIG.heroImage}")`;
         setupListeners();
         resize();
-        // Предварительная отрисовка жизней (полные) при загрузке
         updateUI(true); 
     }
 
@@ -256,12 +253,9 @@
         state.activeObjects = [];
         state.isRunning = true;
         state.lastTime = performance.now();
-        
-        // Сброс и полная перерисовка жизней при старте
         updateUI(true); 
         loadQuestion(0);
         hideAllOverlays();
-        
         requestAnimationFrame(gameLoop);
         clearInterval(state.spawnTimer);
         state.spawnTimer = setInterval(spawnLogic, GAME_CONFIG.spawnInterval);
@@ -276,15 +270,13 @@
         box.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
     }
 
-    // ==========================================
-    // 4. ИГРОВОЙ ЦИКЛ (Без изменений)
-    // ==========================================
     function gameLoop(time) {
         if (!state.isRunning) return;
         const dt = (time - state.lastTime) / 16; state.lastTime = time;
         updateHero(dt); updateObjects(dt);
         requestAnimationFrame(gameLoop);
     }
+
     function updateHero(dt) {
         const speed = GAME_CONFIG.heroSpeed * dt;
         const rect = els.container.getBoundingClientRect();
@@ -296,6 +288,7 @@
         els.hero.style.left = state.heroX + "px";
         els.hero.style.transform = `scaleX(${state.heroFlipped ? -1 : 1})`;
     }
+
     function updateObjects(dt) {
         const gameRect = els.container.getBoundingClientRect();
         const heroRect = els.hero.getBoundingClientRect();
@@ -311,9 +304,6 @@
         }
     }
 
-    // ==========================================
-    // 5. ЛОГИКА (Без изменений)
-    // ==========================================
     function spawnLogic() {
         if (!state.isRunning) return;
         const q = GAME_CONFIG.questions[state.currentQIndex];
@@ -324,6 +314,7 @@
         else { type = 'answer'; isCorrect = false; text = q.wrong[Math.floor(Math.random() * q.wrong.length)]; }
         createFallingObject(type, text, isCorrect);
     }
+
     function createFallingObject(type, text, isCorrect) {
         const el = document.createElement('div'); el.classList.add('falling');
         const size = 70; const gameW = els.container.offsetWidth;
@@ -337,6 +328,7 @@
         els.container.appendChild(el);
         state.activeObjects.push({ el: el, x: x, y: -100, speed: GAME_CONFIG.fallSpeedBase + Math.random() * 1.5, type: type, isCorrect: isCorrect, text: text });
     }
+
     function handleCollision(obj, index) {
         obj.el.remove(); state.activeObjects.splice(index, 1);
         const heroRect = els.hero.getBoundingClientRect(); const centerX = (heroRect.left + heroRect.width/2);
@@ -348,49 +340,41 @@
             else { playSound('snd-wrong'); takeDamage(); showFloatingText("Ошибка!", centerX, heroRect.top, "orange"); }
         }
     }
+
     function nextLevel() {
         state.activeObjects.forEach(o => { o.el.remove(); }); state.activeObjects = [];
         state.currentQIndex++; updateUI();
         if (state.currentQIndex >= GAME_CONFIG.questions.length) { winGame(); } else { loadQuestion(state.currentQIndex); }
     }
+
     function takeDamage() {
         state.lives--;
-        updateUI(); // Вызываем обновление UI, которое запустит анимацию
+        updateUI(); 
         if (state.lives <= 0) { gameOver(); }
     }
 
-    // ==========================================
-    // 6. ВСПОМОГАТЕЛЬНЫЕ (ИЗМЕНЕНА updateUI)
-    // ==========================================
-    
-    // Функция обновления интерфейса (Жизни + Прогресс)
-    // reset = true используется при старте игры для полной перерисовки
+    // --- ОТРИСОВКА ЖИЗНЕЙ ---
     function updateUI(reset = false) {
         const container = els.livesContainer;
-        
         if (reset) {
-            // Полная очистка и создание заново (для старта игры)
             container.innerHTML = '';
             for (let i = 0; i < state.lives; i++) {
-                const heart = document.createElement('span');
+                const heart = document.createElement('div');
                 heart.className = 'heart';
-                heart.textContent = '❤';
+                // Вставка картинки
+                heart.style.backgroundImage = `url("${GAME_CONFIG.lifeImage}")`;
                 container.appendChild(heart);
             }
         } else {
-            // Умное обновление (для анимации потери жизни)
             const currentHearts = container.querySelectorAll('.heart:not(.broken)');
             const count = currentHearts.length;
             const targetCount = state.lives;
-
             if (count > targetCount) {
                 const heartsToRemove = count - targetCount;
-                // Берем последние "живые" сердца в списке
                 for (let i = 0; i < heartsToRemove; i++) {
                     const heartToBreak = currentHearts[count - 1 - i];
                     if (heartToBreak) {
                         heartToBreak.classList.add('broken');
-                        // Удаляем элемент из DOM после окончания анимации
                         heartToBreak.addEventListener('animationend', () => {
                             heartToBreak.remove();
                         }, {once: true});
@@ -398,8 +382,6 @@
                 }
             }
         }
-
-        // Обновление прогресс-бара (без изменений)
         const total = GAME_CONFIG.questions.length;
         const pct = total > 0 ? (state.currentQIndex / total) * 100 : 0;
         els.progressFill.style.width = `${pct}%`;

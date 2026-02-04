@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Falling Objects Quiz (Custom Heart)</title>
+    <title>Falling Objects Quiz (New Hero)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- ОСНОВНЫЕ СТИЛИ --- */
@@ -42,42 +42,42 @@
         }
         #question-text { font-size: 24px; color: #333; font-weight: bold; }
 
-        /* --- ЖИЗНИ (Ваше сердце) --- */
+        /* --- ЖИЗНИ --- */
         #lives-box {
             position: absolute; top: 20px; right: 20px;
             display: flex; gap: 10px; 
             pointer-events: none;
         }
 
-        /* Стиль отдельного сердечка */
         .heart {
-            width: 50px;  /* Размер сердца */
+            width: 50px;
             height: 50px; 
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             display: inline-block;
             transition: transform 0.3s ease;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); /* Тень */
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
         }
 
-        /* Анимация разбивания */
+        /* АНИМАЦИЯ РАЗБИВАНИЯ (МЕДЛЕННАЯ) */
         @keyframes heartBreakAnim {
             0% { transform: scale(1); opacity: 1; filter: brightness(1); }
-            20% { 
-                transform: scale(1.2) rotate(-15deg); 
-                filter: brightness(10) sepia(1); /* Яркая вспышка */
+            10% { 
+                transform: scale(1.1) rotate(-5deg); 
+                filter: brightness(2) sepia(1); /* Вспышка */
             } 
-            40% { transform: scale(0.9) rotate(10deg); filter: brightness(1); }
             100% { 
-                transform: translateY(-80px) scale(1.5) rotate(-30deg); 
+                /* Медленный улет вверх */
+                transform: translateY(-150px) scale(1.2) rotate(-20deg); 
                 opacity: 0; 
-                filter: blur(5px) grayscale(1); /* Исчезает и сереет */
+                filter: blur(10px) grayscale(1); 
             }
         }
 
         .heart.broken {
-            animation: heartBreakAnim 0.8s forwards ease-out;
+            /* Время анимации 2.5 секунды */
+            animation: heartBreakAnim 2.5s forwards ease-out;
             z-index: 100; 
             position: relative;
         }
@@ -86,7 +86,7 @@
         #hero {
             position: absolute; bottom: 30px; width: 100px; height: 130px;
             background-repeat: no-repeat; background-position: center; background-size: contain;
-            background-image: url("https://i.postimg.cc/V6FvXj9M/grinc-kopia.png");
+            /* Изображение героя задается в JS */
             transform-origin: center bottom; transition: transform 0.1s linear; z-index: 5;
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
@@ -203,10 +203,12 @@
     // 1. КОНФИГУРАЦИЯ
     // ==========================================
     const GAME_CONFIG = {
-        // Ваше изображение сердца:
-        lifeImage: "https://img.genially.com/684ea2da1b51060014c50e97/66654779-9941-4a6a-bfed-53d1fab8862f.png", 
+        // Ваша GIF-анимация жизней:
+        lifeImage: "https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif", 
         
-        heroImage: "https://i.postimg.cc/V6FvXj9M/grinc-kopia.png",
+        // ВАШ НОВЫЙ ГЕРОЙ:
+        heroImage: "https://img.genially.com/684ea2da1b51060014c50e97/ea80b435-14c0-4490-b057-d9b367d6d8b8.png",
+        
         bombImage: "https://i.postimg.cc/tCfZ91wG/3.png",
         giftImageCorrect: "https://i.postimg.cc/RCGR6kpR/podarok-dudl.png",
         giftImageWrong: "https://i.postimg.cc/fbtxnZY7/1.png",
@@ -240,6 +242,7 @@
     };
 
     function init() {
+        // Установка фона героя из конфига
         els.hero.style.backgroundImage = `url("${GAME_CONFIG.heroImage}")`;
         setupListeners();
         resize();
@@ -361,7 +364,7 @@
             for (let i = 0; i < state.lives; i++) {
                 const heart = document.createElement('div');
                 heart.className = 'heart';
-                // Вставка картинки
+                // GIF как фон
                 heart.style.backgroundImage = `url("${GAME_CONFIG.lifeImage}")`;
                 container.appendChild(heart);
             }

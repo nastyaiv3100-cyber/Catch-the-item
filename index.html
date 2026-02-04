@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Falling Objects Quiz (Big Hero + New Gifts)</title>
+    <title>Falling Objects Quiz (New Bomb)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- ОСНОВНЫЕ СТИЛИ --- */
@@ -86,9 +86,7 @@
         /* --- ИГРОВЫЕ ЭЛЕМЕНТЫ --- */
         #hero {
             position: absolute; bottom: 30px; 
-            /* УВЕЛИЧЕННЫЙ РАЗМЕР ГЕРОЯ: */
             width: 150px; height: 190px;
-            
             background-repeat: no-repeat; background-position: center; background-size: contain;
             transform-origin: center bottom; transition: transform 0.1s linear; z-index: 5;
         }
@@ -220,12 +218,12 @@
     const GAME_CONFIG = {
         lifeImage: "https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif", 
         heroImage: "https://img.genially.com/684ea2da1b51060014c50e97/ea80b435-14c0-4490-b057-d9b367d6d8b8.png",
-        bombImage: "https://i.postimg.cc/tCfZ91wG/3.png",
         
-        // НОВЫЕ ПОДАРКИ:
-        // Красная коробка = Правильно
+        // НОВАЯ БОМБА (ДИНАМИТ):
+        bombImage: "https://img.genially.com/684ea2da1b51060014c50e97/1100a032-bbfa-469f-aa6c-454364216500.png",
+        
+        // Подарки
         giftImageCorrect: "https://img.genially.com/684ea2da1b51060014c50e97/6caada9a-c539-4f5d-952c-c63df7c459f4.png",
-        // Синяя коробка = Неправильно
         giftImageWrong: "https://img.genially.com/684ea2da1b51060014c50e97/152eafba-7d36-41e3-9026-b78a900821bd.png",
         
         heroSpeed: 6, fallSpeedBase: 2, spawnInterval: 900, maxLives: 3,

@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Falling Objects Quiz (New Hero)</title>
+    <title>Falling Objects Quiz (Stable Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- ОСНОВНЫЕ СТИЛИ --- */
@@ -57,26 +57,18 @@
             background-position: center;
             display: inline-block;
             transition: transform 0.3s ease;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+            /* Убрал тяжелую тень для оптимизации GIF */
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
 
-        /* АНИМАЦИЯ РАЗБИВАНИЯ (МЕДЛЕННАЯ) */
+        /* АНИМАЦИЯ РАЗБИВАНИЯ */
         @keyframes heartBreakAnim {
             0% { transform: scale(1); opacity: 1; filter: brightness(1); }
-            10% { 
-                transform: scale(1.1) rotate(-5deg); 
-                filter: brightness(2) sepia(1); /* Вспышка */
-            } 
-            100% { 
-                /* Медленный улет вверх */
-                transform: translateY(-150px) scale(1.2) rotate(-20deg); 
-                opacity: 0; 
-                filter: blur(10px) grayscale(1); 
-            }
+            10% { transform: scale(1.1) rotate(-5deg); filter: brightness(2) sepia(1); } 
+            100% { transform: translateY(-150px) scale(1.2) rotate(-20deg); opacity: 0; filter: blur(10px) grayscale(1); }
         }
 
         .heart.broken {
-            /* Время анимации 2.5 секунды */
             animation: heartBreakAnim 2.5s forwards ease-out;
             z-index: 100; 
             position: relative;
@@ -86,15 +78,15 @@
         #hero {
             position: absolute; bottom: 30px; width: 100px; height: 130px;
             background-repeat: no-repeat; background-position: center; background-size: contain;
-            /* Изображение героя задается в JS */
             transform-origin: center bottom; transition: transform 0.1s linear; z-index: 5;
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+            /* Оптимизация: убрал тяжелый drop-shadow с героя, чтобы не тормозило */
         }
         .falling {
             position: absolute; top: -100px; display: flex;
             justify-content: center; align-items: center; background-size: contain;
             background-repeat: no-repeat; background-position: center; will-change: top;
-            z-index: 4; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            z-index: 4; 
+            /* Оптимизация: убрал тень с падающих объектов для производительности */
         }
         .item-label {
             background: rgba(0,0,0,0.8); color: white; padding: 4px 8px;
@@ -203,10 +195,7 @@
     // 1. КОНФИГУРАЦИЯ
     // ==========================================
     const GAME_CONFIG = {
-        // Ваша GIF-анимация жизней:
         lifeImage: "https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif", 
-        
-        // ВАШ НОВЫЙ ГЕРОЙ:
         heroImage: "https://img.genially.com/684ea2da1b51060014c50e97/ea80b435-14c0-4490-b057-d9b367d6d8b8.png",
         
         bombImage: "https://i.postimg.cc/tCfZ91wG/3.png",
@@ -225,7 +214,8 @@
     let state = {
         isRunning: false, currentQIndex: 0, lives: GAME_CONFIG.maxLives,
         heroX: 0, heroFlipped: false, activeObjects: [], lastTime: 0,
-        spawnTimer: 0, keys: { left: false, right: false }
+        spawnTimer: 0, animationFrameId: null, // Добавлено для контроля кадров
+        keys: { left: false, right: false }
     };
 
     const els = {
@@ -242,7 +232,6 @@
     };
 
     function init() {
-        // Установка фона героя из конфига
         els.hero.style.backgroundImage = `url("${GAME_CONFIG.heroImage}")`;
         setupListeners();
         resize();
@@ -250,17 +239,23 @@
     }
 
     function startGame() {
+        // Остановка предыдущих циклов (Защита от двойной скорости)
+        if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+        clearInterval(state.spawnTimer);
+
         state.lives = GAME_CONFIG.maxLives;
         state.currentQIndex = 0;
         state.activeObjects.forEach(o => o.el.remove());
         state.activeObjects = [];
         state.isRunning = true;
         state.lastTime = performance.now();
+        
         updateUI(true); 
         loadQuestion(0);
         hideAllOverlays();
-        requestAnimationFrame(gameLoop);
-        clearInterval(state.spawnTimer);
+        
+        // Запуск
+        state.animationFrameId = requestAnimationFrame(gameLoop);
         state.spawnTimer = setInterval(spawnLogic, GAME_CONFIG.spawnInterval);
     }
 
@@ -275,9 +270,13 @@
 
     function gameLoop(time) {
         if (!state.isRunning) return;
-        const dt = (time - state.lastTime) / 16; state.lastTime = time;
-        updateHero(dt); updateObjects(dt);
-        requestAnimationFrame(gameLoop);
+        const dt = (time - state.lastTime) / 16; 
+        state.lastTime = time;
+        
+        updateHero(dt); 
+        updateObjects(dt);
+        
+        state.animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function updateHero(dt) {
@@ -296,20 +295,43 @@
         const gameRect = els.container.getBoundingClientRect();
         const heroRect = els.hero.getBoundingClientRect();
         const hitBox = { l: heroRect.left + 20, r: heroRect.right - 20, t: heroRect.top + 30, b: heroRect.bottom };
+        
+        // Цикл с конца
         for (let i = state.activeObjects.length - 1; i >= 0; i--) {
+            // ВАЖНО: Если уровень сменился и массив очистился, прерываем цикл сразу
+            if (i >= state.activeObjects.length) break;
+
             const obj = state.activeObjects[i];
+            if (!obj) continue; // Защита от ошибок
+
             obj.y += obj.speed * dt; obj.el.style.top = obj.y + "px";
-            if (obj.y > gameRect.height) { obj.el.remove(); state.activeObjects.splice(i, 1); continue; }
+            
+            // Удаление если улетел вниз
+            if (obj.y > gameRect.height) { 
+                obj.el.remove(); 
+                state.activeObjects.splice(i, 1); 
+                continue; 
+            }
+
             const objRect = obj.el.getBoundingClientRect();
             if (objRect.right > hitBox.l && objRect.left < hitBox.r && objRect.bottom > hitBox.t && objRect.top < hitBox.b) {
                 handleCollision(obj, i);
+                
+                // ВАЖНО: Если после коллизии произошла смена уровня (очистка массива),
+                // нужно немедленно остановить этот цикл, иначе будет ошибка и зависание.
+                if (state.activeObjects.length === 0) break;
             }
         }
     }
 
     function spawnLogic() {
         if (!state.isRunning) return;
+        // Защита: не спавнить, если вопросы кончились
+        if (state.currentQIndex >= GAME_CONFIG.questions.length) return;
+
         const q = GAME_CONFIG.questions[state.currentQIndex];
+        if (!q) return;
+
         const rand = Math.random();
         let type, text, isCorrect;
         if (rand < 0.1) { type = 'bomb'; } 
@@ -333,21 +355,40 @@
     }
 
     function handleCollision(obj, index) {
-        obj.el.remove(); state.activeObjects.splice(index, 1);
+        obj.el.remove(); 
+        state.activeObjects.splice(index, 1);
+        
         const heroRect = els.hero.getBoundingClientRect(); const centerX = (heroRect.left + heroRect.width/2);
+        
         if (obj.type === 'bomb') {
             playSound('snd-wrong'); takeDamage(); shakeScreen();
             showFloatingText("-1 ❤️", centerX, heroRect.top, "red");
         } else if (obj.type === 'answer') {
-            if (obj.isCorrect) { playSound('snd-correct'); showFloatingText("Верно!", centerX, heroRect.top, "#4caf50"); nextLevel(); } 
-            else { playSound('snd-wrong'); takeDamage(); showFloatingText("Ошибка!", centerX, heroRect.top, "orange"); }
+            if (obj.isCorrect) { 
+                playSound('snd-correct'); 
+                showFloatingText("Верно!", centerX, heroRect.top, "#4caf50"); 
+                nextLevel(); // <--- Здесь происходит очистка массива
+            } else { 
+                playSound('snd-wrong'); 
+                takeDamage(); 
+                showFloatingText("Ошибка!", centerX, heroRect.top, "orange"); 
+            }
         }
     }
 
     function nextLevel() {
-        state.activeObjects.forEach(o => { o.el.remove(); }); state.activeObjects = [];
-        state.currentQIndex++; updateUI();
-        if (state.currentQIndex >= GAME_CONFIG.questions.length) { winGame(); } else { loadQuestion(state.currentQIndex); }
+        // Очищаем текущие объекты
+        state.activeObjects.forEach(o => { o.el.remove(); }); 
+        state.activeObjects = []; // Обнуляем массив
+        
+        state.currentQIndex++; 
+        updateUI();
+        
+        if (state.currentQIndex >= GAME_CONFIG.questions.length) { 
+            winGame(); 
+        } else { 
+            loadQuestion(state.currentQIndex); 
+        }
     }
 
     function takeDamage() {
@@ -356,7 +397,6 @@
         if (state.lives <= 0) { gameOver(); }
     }
 
-    // --- ОТРИСОВКА ЖИЗНЕЙ ---
     function updateUI(reset = false) {
         const container = els.livesContainer;
         if (reset) {
@@ -364,7 +404,6 @@
             for (let i = 0; i < state.lives; i++) {
                 const heart = document.createElement('div');
                 heart.className = 'heart';
-                // GIF как фон
                 heart.style.backgroundImage = `url("${GAME_CONFIG.lifeImage}")`;
                 container.appendChild(heart);
             }
@@ -403,12 +442,18 @@
         const audio = document.getElementById(id); if(audio && audio.src) { audio.currentTime = 0; }
     }
     function gameOver() {
-        state.isRunning = false; playSound('snd-lose'); clearInterval(state.spawnTimer);
+        state.isRunning = false; 
+        if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+        clearInterval(state.spawnTimer);
+        playSound('snd-lose'); 
         els.overlays.gameOver.classList.remove('hidden');
     }
     function winGame() {
-        state.isRunning = false; playSound('snd-win');
-        els.progressFill.style.width = '100%'; clearInterval(state.spawnTimer);
+        state.isRunning = false; 
+        if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+        clearInterval(state.spawnTimer);
+        playSound('snd-win');
+        els.progressFill.style.width = '100%'; 
         els.overlays.win.classList.remove('hidden');
     }
     function hideAllOverlays() { Object.values(els.overlays).forEach(el => el.classList.add('hidden')); }

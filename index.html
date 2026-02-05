@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Builder v46 (Stable & Loud)</title>
+<title>Builder v48 (Sound Fix)</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Pacifico&family=Ruslan+Display&display=swap" rel="stylesheet">
 <style>
 /* --- РЕДАКТОР --- */
-:root{--primary:#8e44ad;--bg:#fdfefe;--panel-w:400px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Roboto',sans-serif;height:100vh;display:flex;overflow:hidden;background:var(--bg)}
+:root{--primary:#9b59b6;--bg:#fdfefe;--panel-w:400px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Roboto',sans-serif;height:100vh;display:flex;overflow:hidden;background:var(--bg)}
 .editor-panel{width:var(--panel-w);background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column;z-index:10}
 .editor-header{padding:15px;background:#2c3e50;color:#fff}.editor-header h2{font-size:18px;margin:0}
 .tabs{display:flex;background:#34495e}.tab{flex:1;text-align:center;padding:10px;color:#bdc3c7;cursor:pointer;font-size:13px;border-bottom:3px solid transparent}.tab.active{color:#fff;border-bottom-color:var(--primary);background:#2c3e50}
@@ -16,7 +16,7 @@
 .form-group input[type="color"]{height:30px;padding:2px;cursor:pointer}.form-group input[type="range"]{width:100%;cursor:pointer}
 .form-row{display:flex;gap:10px}.q-item{background:#f8f9fa;border:1px solid #e9ecef;padding:8px;border-radius:6px;margin-bottom:8px;position:relative}
 .btn-remove-q{position:absolute;top:2px;right:5px;color:red;cursor:pointer;font-size:16px;font-weight:bold}
-.btn-add{width:100%;padding:8px;background:#f4ecf7;border:1px dashed #8e44ad;color:#8e44ad;cursor:pointer;font-weight:700}
+.btn-add{width:100%;padding:8px;background:#f5eef8;border:1px dashed #8e44ad;color:#8e44ad;cursor:pointer;font-weight:700}
 .editor-footer{padding:15px;border-top:1px solid #ddd;background:#fff}
 .btn-generate{width:100%;padding:12px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer}
 .preview-area{flex:1;background:#ecf0f1;padding:20px;display:flex;align-items:center;justify-content:center}
@@ -30,7 +30,7 @@
 </head>
 <body>
 <div class="editor-panel">
-    <div class="editor-header"><h2>✨ Конструктор v46 (Stable)</h2></div>
+    <div class="editor-header"><h2>✨ Конструктор v48 (Sound Fix)</h2></div>
     <div class="tabs">
         <div class="tab active" onclick="switchTab('content')">Вопросы</div>
         <div class="tab" onclick="switchTab('graphics')">Графика</div>
@@ -55,7 +55,7 @@
             <div class="form-group"><label>Шрифт</label><select id="font-family" onchange="u()"><option value="Ruslan Display">Ruslan Display</option><option value="Roboto">Roboto</option><option value="Pacifico">Pacifico</option><option value="Arial">Arial</option></select></div>
             <div class="form-row"><div class="form-group"><label>Размер Вопроса</label><input type="number" id="fs-q" value="28" onchange="u()"></div><div class="form-group"><label>Размер Ответа</label><input type="number" id="fs-a" value="20" onchange="u()"></div></div>
             
-            <div class="form-group"><label>🎨 Цвет ФОНА ОКНА</label><input type="color" id="col-win-bg" value="#111111" onchange="u()"></div>
+            <div class="form-group"><label>🎨 Цвет ФОНА ОКНА</label><input type="color" id="col-win-bg" value="#1a1a1a" onchange="u()"></div>
             <div class="form-group"><label>✨ Цвет РАМКИ / КНОПКИ</label><input type="color" id="col-border" value="#a29bfe" onchange="u()"></div>
             
             <div class="form-row"><div class="form-group" style="flex:1"><label>Текст Ответа</label><input type="color" id="col-lt" value="#ffffff" onchange="u()"></div><div class="form-group" style="flex:1"><label>Фон Ответа</label><input type="color" id="col-lb" value="#000000" onchange="u()"></div></div>
@@ -101,7 +101,7 @@ function build(c){
     const fUrl=fonts[c.fn]; const fLink=fUrl?`<link href="${fUrl}" rel="stylesheet">`:'';
     const qs=JSON.stringify(c.qs);
     
-    // ВЕРСИЯ 46: СТАБИЛЬНАЯ (ИСПРАВЛЕН БАГ ДВИЖЕНИЯ И ЗВУКИ)
+    // ВЕРСИЯ 48: ИСПРАВЛЕНА ССЫЛКА НА АУДИО (raw.githubusercontent.com)
     
     let html = `<!DOCTYPE html>
 <html lang="ru">
@@ -235,9 +235,12 @@ function sft(t,x,y,c){const e=D.createElement('div');e.className='ft';e.textCont
 function ps(i){const a=new Audio();
 if(i=='snd-correct')a.src='https://zvukipro.com/uploads/files/2018-10/1540309251_jg-032316-sfx-video-game-retro-8-bit-coin-pickup-1.mp3';
 if(i=='snd-wrong')a.src='https://zvukipro.com/uploads/files/2018-10/1540309327_jg-032316-sfx-video-game-retro-8-bit-error-tone.mp3';
-if(i=='snd-bomb')a.src='https://actions.google.com/sounds/v1/impacts/crash_heavy_short.ogg';
+// ПРЯМАЯ ССЫЛКА НА GITHUB (RAW) - ЭТО ДОЛЖНО РАБОТАТЬ
+if(i=='snd-bomb')a.src='https://raw.githubusercontent.com/nastyaiv3100-cyber/Catch-the-item/main/262436__the_sound_side__real-explosions-real-gunshots.wav';
 if(i=='snd-lose')a.src='https://zvukipro.com/uploads/files/2021-02/1612773299_fail-sound-effect.mp3';
-if(i=='snd-win')a.src='https://zvukipro.com/uploads/files/2020-07/1594279589_claps.mp3';a.play().catch(e=>{});}
+if(i=='snd-win')a.src='https://zvukipro.com/uploads/files/2020-07/1594279589_claps.mp3';
+a.volume = 1.0; /* Максимальная громкость */
+a.play().catch(e=>{console.log("Audio play error:", e);});}
 function go(){s.rn=0;if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);so(2);}
 function wg(){s.rn=0;if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);E.pf.style.width='100%';so(3);}
 function fc(){const c=['#d13447','#ffbf00','#263672','#7b2cbf','#8ac926','#1982c4'];for(let i=0;i<150;i++){const e=D.createElement('div');e.className='cf';e.style.backgroundColor=c[Math.floor(Math.random()*c.length)];e.style.left=Math.random()*100+'vw';const d=Math.random()*3+2;e.style.animation=\`cfa \${d}s linear forwards\`;e.style.animationDelay=Math.random()*2+'s';const s=Math.random()*10+5;e.style.width=s+'px';e.style.height=s*0.6+'px';E.c.appendChild(e);}}
@@ -245,7 +248,7 @@ function rs(){s.hx=(E.c.offsetWidth-100)/2;E.h.style.left=s.hx+"px";}
 function ev(){
     window.addEventListener('resize',rs);
     window.addEventListener('keydown',e=>{if(e.code==='Space')tp();if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=1;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=1;});
-    window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=0;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=0;}); // ИСПРАВЛЕНО
+    window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=0;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=0;}); 
     E.pb.addEventListener('click',tp);E.ob.addEventListener('click',tp);}
 I();})();
 <\/script></body></html>`;

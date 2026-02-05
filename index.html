@@ -1,416 +1,256 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Game Builder v3.2 (Genially Full Slide)</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Lobster&family=Pacifico&family=Comfortaa:wght@400;700&family=Ruslan+Display&display=swap" rel="stylesheet">
-
-  <style>
-    :root { --primary:#e74c3c; --bg:#f5f7fa; --panel-w:420px; }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Roboto',sans-serif; height:100vh; display:flex; overflow:hidden; background:var(--bg); }
-
-    .editor-panel { width:var(--panel-w); background:#fff; border-right:1px solid #ddd; display:flex; flex-direction:column; z-index:10; }
-    .editor-header { padding:20px; background:#2c3e50; color:#fff; }
-    .editor-header h2 { font-size:18px; margin:0; }
-
-    .tabs { display:flex; background:#34495e; }
-    .tab { flex:1; text-align:center; padding:12px; color:#bdc3c7; cursor:pointer; font-size:13px; border-bottom:3px solid transparent; transition:.2s; }
-    .tab.active { color:#fff; border-bottom-color:var(--primary); background:#2c3e50; }
-
-    .settings-content { flex:1; overflow-y:auto; padding:20px; }
-    .section { display:none; }
-    .section.active { display:block; }
-
-    .form-group { margin-bottom:12px; }
-    .form-group label { display:block; font-size:11px; font-weight:bold; color:#7f8c8d; margin-bottom:4px; text-transform:uppercase; }
-    .form-group input[type="text"], .form-group input[type="number"], .form-group textarea, .form-group select {
-      width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:14px;
-    }
-    .form-group input[type="color"] { width:100%; height:35px; border:1px solid #ddd; border-radius:4px; cursor:pointer; padding:2px; }
-    .form-group input[type="range"] { width:100%; cursor:pointer; }
-    .range-val { float:right; font-weight:bold; color:var(--primary); }
-    .form-row { display:flex; gap:10px; }
-
-    .q-item { background:#f8f9fa; border:1px solid #e9ecef; padding:10px; border-radius:6px; margin-bottom:10px; position:relative; }
-    .btn-remove-q { position:absolute; top:5px; right:5px; color:red; cursor:pointer; font-size:18px; line-height:1; }
-    .btn-add { width:100%; padding:10px; background:#eeffee; border:1px dashed #2ecc71; color:#27ae60; cursor:pointer; font-weight:bold; }
-
-    .editor-footer { padding:20px; border-top:1px solid #ddd; background:#fff; }
-    .btn-generate { width:100%; padding:15px; background:linear-gradient(135deg,#e74c3c,#c0392b); color:#fff; border:none; border-radius:6px; font-size:16px; font-weight:bold; cursor:pointer; box-shadow:0 4px 10px rgba(231,76,60,.3); }
-    .btn-generate:hover { transform: translateY(-2px); }
-
-    .preview-area { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#e0e5ec; padding:20px; }
-    #game-preview-container { width:960px; height:540px; background:#fff; box-shadow:0 20px 50px rgba(0,0,0,.2); border-radius:8px; overflow:hidden; }
-    #game-frame { width:100%; height:100%; border:none; }
-
-    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; display:none; align-items:center; justify-content:center; }
-    .code-modal { background:#fff; padding:30px; border-radius:8px; width:650px; max-width:92%; display:flex; flex-direction:column; gap:15px; }
-    .code-modal textarea { width:100%; height:320px; font-family:monospace; padding:10px; font-size:12px; }
-    .modal-btns { display:flex; justify-content:flex-end; gap:10px; }
-  </style>
-</head>
-
-<body>
-  <div class="editor-panel">
-    <div class="editor-header"><h2>⚙ Конструктор v3.2 (Genially Full Slide)</h2></div>
-
-    <div class="tabs">
-      <div class="tab active" data-tab="content">Вопросы</div>
-      <div class="tab" data-tab="graphics">Графика</div>
-      <div class="tab" data-tab="style">Стиль</div>
-      <div class="tab" data-tab="text">Тексты</div>
-    </div>
-
-    <div class="settings-content">
-      <div id="tab-content" class="section active">
-        <div id="questions-list"></div>
-        <button class="btn-add" onclick="addQuestion()">+ Добавить вопрос</button>
-      </div>
-
-      <div id="tab-graphics" class="section">
-        <div class="form-group"><label>Герой (URL)</label><input type="text" id="img-hero" onchange="updatePreview()"></div>
-        <div class="form-group"><label>Бомба (URL)</label><input type="text" id="img-bomb" onchange="updatePreview()"></div>
-        <div class="form-group"><label>Жизни (GIF/IMG URL)</label><input type="text" id="img-life" onchange="updatePreview()"></div>
-        <div class="form-row">
-          <div class="form-group" style="flex:1"><label>Верный (Фон)</label><input type="text" id="img-correct" onchange="updatePreview()"></div>
-          <div class="form-group" style="flex:1"><label>Неверный (Фон)</label><input type="text" id="img-wrong" onchange="updatePreview()"></div>
-        </div>
-      </div>
-
-      <div id="tab-style" class="section">
-        <div class="form-group" style="background:#fff0f0; padding:10px; border-radius:5px; border:1px solid #fadbd8;">
-          <label style="color:#c0392b;">🚀 Скорость падения <span id="speed-display" class="range-val">2</span></label>
-          <input type="range" id="conf-speed" min="1" max="10" step="0.5" value="2"
-                 oninput="document.getElementById('speed-display').innerText=this.value; updatePreview()">
-        </div>
-
-        <div class="form-group">
-          <label>Шрифт игры</label>
-          <select id="font-family" onchange="updatePreview()">
-            <option value="Roboto Condensed">Roboto Condensed</option>
-            <option value="Open Sans">Open Sans</option>
-            <option value="Lobster">Lobster</option>
-            <option value="Pacifico">Pacifico</option>
-            <option value="Comfortaa">Comfortaa</option>
-            <option value="Ruslan Display">Ruslan Display</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group"><label>Разм. Вопроса</label><input type="number" id="font-size-q" value="24" onchange="updatePreview()"></div>
-          <div class="form-group"><label>Разм. Ответа</label><input type="number" id="font-size-a" value="18" onchange="updatePreview()"></div>
-        </div>
-
-        <div class="form-group"><label>Цвет рамки / кнопок</label><input type="color" id="col-border" value="#ffcc00" onchange="updatePreview()"></div>
-
-        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;">
-
-        <div class="form-row">
-          <div class="form-group" style="flex:1">
-            <label>Цвет текста (Ответ)</label>
-            <input type="color" id="col-lbl-text" value="#ffffff" onchange="updatePreview()">
-          </div>
-          <div class="form-group" style="flex:1">
-            <label>Фон текста (Ответ)</label>
-            <input type="color" id="col-lbl-bg" value="#000000" onchange="updatePreview()">
-          </div>
-        </div>
-
-        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;">
-
-        <div class="form-row">
-          <div class="form-group" style="flex:1"><label>Прогресс (Старт)</label><input type="color" id="col-prog-1" value="#ffd700" onchange="updatePreview()"></div>
-          <div class="form-group" style="flex:1"><label>Прогресс (Конец)</label><input type="color" id="col-prog-2" value="#ffa500" onchange="updatePreview()"></div>
-        </div>
-      </div>
-
-      <div id="tab-text" class="section">
-        <div class="form-group"><label>Заголовок</label><input type="text" id="txt-title" value="Падающие предметы" onchange="updatePreview()"></div>
-        <div class="form-group"><label>Описание</label><textarea id="txt-desc" rows="2" onchange="updatePreview()">Лови правильные ответы, избегай бомб!</textarea></div>
-        <div class="form-group"><label>Текст Победы</label><input type="text" id="txt-win" value="Победа!" onchange="updatePreview()"></div>
-        <div class="form-group"><label>Подзаголовок Победы</label><input type="text" id="txt-win-sub" value="Все вопросы пройдены!" onchange="updatePreview()"></div>
-        <div class="form-group"><label>Текст Проигрыша</label><input type="text" id="txt-lose" value="Ой!" onchange="updatePreview()"></div>
-        <div class="form-group"><label>Подзаголовок Проигрыша</label><input type="text" id="txt-lose-sub" value="Жизни закончились." onchange="updatePreview()"></div>
-      </div>
-    </div>
-
-    <div class="editor-footer">
-      <button class="btn-generate" onclick="generateCode()">🚀 КОПИРОВАТЬ КОД</button>
-    </div>
-  </div>
-
-  <div class="preview-area">
-    <div id="game-preview-container"><iframe id="game-frame"></iframe></div>
-  </div>
-
-  <div id="modal-code" class="modal-overlay">
-    <div class="code-modal">
-      <h3>Готовый код для Genially (на весь слайд)</h3>
-      <p>В Genially просто растяни объект с этим HTML на весь слайд (16:9). Код уже без масштабирования и без “уезда вправо”.</p>
-      <textarea id="final-code" readonly></textarea>
-      <div class="modal-btns">
-        <button onclick="document.getElementById('modal-code').style.display='none'">Закрыть</button>
-        <button onclick="copyToClipboard()"
-                style="background:#e74c3c; color:#fff; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">
-          Копировать
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const defaultData = {
-      hero: "https://img.genially.com/684ea2da1b51060014c50e97/ea80b435-14c0-4490-b057-d9b367d6d8b8.png",
-      bomb: "https://img.genially.com/684ea2da1b51060014c50e97/1100a032-bbfa-469f-aa6c-454364216500.png",
-      life: "https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif",
-      giftC: "https://img.genially.com/684ea2da1b51060014c50e97/6caada9a-c539-4f5d-952c-c63df7c459f4.png",
-      giftW: "https://img.genially.com/684ea2da1b51060014c50e97/152eafba-7d36-41e3-9026-b78a900821bd.png",
-      questions: [
-        { t: "Какой сейчас год?", c: "2026", w: "2025, 2024" },
-        { t: "Столица Франции?", c: "Париж", w: "Рим, Берлин" }
-      ]
-    };
-
-    const fontMap = {
-      "Roboto Condensed": "https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap",
-      "Open Sans": "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap",
-      "Lobster": "https://fonts.googleapis.com/css2?family=Lobster&display=swap",
-      "Pacifico": "https://fonts.googleapis.com/css2?family=Pacifico&display=swap",
-      "Comfortaa": "https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap",
-      "Ruslan Display": "https://fonts.googleapis.com/css2?family=Ruslan+Display&display=swap"
-    };
-
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-    });
-
-    window.onload = function() {
-      document.getElementById('img-hero').value = defaultData.hero;
-      document.getElementById('img-bomb').value = defaultData.bomb;
-      document.getElementById('img-life').value = defaultData.life;
-      document.getElementById('img-correct').value = defaultData.giftC;
-      document.getElementById('img-wrong').value = defaultData.giftW;
-
-      defaultData.questions.forEach(q => addQuestion(q.t, q.c, q.w));
-      updatePreview();
-    };
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById('tab-' + tabId).classList.add('active');
-    }
-
-    function addQuestion(text="", cor="", wr="") {
-      const div = document.createElement('div');
-      div.className = 'q-item';
-      div.innerHTML = `
-        <div class="btn-remove-q" title="Удалить">×</div>
-        <input type="text" class="q-text" placeholder="Вопрос" value="${escapeHtml(text)}" onchange="updatePreview()">
-        <div class="form-row">
-          <input type="text" class="q-correct" placeholder="Верно (можно: 8, восемь)" value="${escapeHtml(cor)}" style="border-color:#2ecc71" onchange="updatePreview()">
-          <input type="text" class="q-wrong" placeholder="Неверно (через запятую)" value="${escapeHtml(wr)}" style="border-color:#e74c3c" onchange="updatePreview()">
-        </div>
-      `;
-      div.querySelector('.btn-remove-q').onclick = () => { div.remove(); updatePreview(); };
-      document.getElementById('questions-list').appendChild(div);
-      updatePreview();
-    }
-
-    function escapeHtml(str){
-      return String(str ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function getConfig() {
-      const qs = [];
-      document.querySelectorAll('.q-item').forEach(item => {
-        const t = item.querySelector('.q-text').value;
-        const c = item.querySelector('.q-correct').value.split(',').map(s=>s.trim()).filter(Boolean);
-        const w = item.querySelector('.q-wrong').value.split(',').map(s=>s.trim()).filter(Boolean);
-        if(t) qs.push({ text: t, correct: c, wrong: w });
-      });
-
-      return {
-        speed: document.getElementById('conf-speed').value,
-        hero: document.getElementById('img-hero').value,
-        bomb: document.getElementById('img-bomb').value,
-        life: document.getElementById('img-life').value,
-        giftC: document.getElementById('img-correct').value,
-        giftW: document.getElementById('img-wrong').value,
-        questions: qs,
-        fontName: document.getElementById('font-family').value,
-        sizeQ: document.getElementById('font-size-q').value,
-        sizeA: document.getElementById('font-size-a').value,
-        colBorder: document.getElementById('col-border').value,
-        colProg1: document.getElementById('col-prog-1').value,
-        colProg2: document.getElementById('col-prog-2').value,
-        colLblText: document.getElementById('col-lbl-text').value,
-        colLblBg: document.getElementById('col-lbl-bg').value,
-        txtTitle: document.getElementById('txt-title').value,
-        txtDesc: document.getElementById('txt-desc').value,
-        txtWin: document.getElementById('txt-win').value,
-        txtWinSub: document.getElementById('txt-win-sub').value,
-        txtLose: document.getElementById('txt-lose').value,
-        txtLoseSub: document.getElementById('txt-lose-sub').value,
-      };
-    }
-
-    function updatePreview() {
-      const config = getConfig();
-      const gameCode = buildGameHTML(config, false);
-      const frame = document.getElementById('game-frame');
-      frame.src = URL.createObjectURL(new Blob([gameCode], { type: 'text/html' }));
-    }
-
-    function generateCode() {
-      const config = getConfig();
-      const code = buildGameHTML(config, true);
-      document.getElementById('final-code').value = code;
-      document.getElementById('modal-code').style.display = 'flex';
-    }
-
-    function copyToClipboard() {
-      const copyText = document.getElementById("final-code");
-      copyText.select();
-      document.execCommand("copy");
-      alert("Скопировано!");
-    }
-
-    // ===== GAME CODE: без scale, всегда 100%×100%, без "уезда" =====
-    function buildGameHTML(cfg, minify) {
-      const qJSON = JSON.stringify(cfg.questions);
-      const fontUrl = fontMap[cfg.fontName] || fontMap["Open Sans"];
-
-      let html = `
-<!DOCTYPE html>
-<html lang="ru">
-<head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<link href="${fontUrl}" rel="stylesheet">
+<title>Builder v46 (Stable & Loud)</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Pacifico&family=Ruslan+Display&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-family:'${cfg.fontName}',sans-serif}
-
-/* ВАЖНО: никаких 100vw/100vh — только inset:0 */
-#GC{position:absolute;inset:0;overflow:hidden}
-:root{--bc:${cfg.colBorder};--p1:${cfg.colProg1};--p2:${cfg.colProg2};--fq:${cfg.sizeQ}px;--fa:${cfg.sizeA}px;--cl:${cfg.colLblText};--cbg:${cfg.colLblBg}}
-#UI{position:absolute;inset:0 auto auto 0;width:100%;padding:15px;z-index:10;display:flex;flex-direction:column;gap:10px;pointer-events:none}
-.tb{display:flex;align-items:center;justify-content:center;gap:15px;pointer-events:auto}
-#PB{width:40px;height:40px;border-radius:50%;border:2px solid #fff;background:var(--bc);color:#333;font-weight:700;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,.3);transition:transform .1s}
-#PB:active{transform:scale(.9)}
-.pc{flex-grow:1;max-width:600px;height:20px;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);border-radius:10px;overflow:hidden}
-.pf{height:100%;background:linear-gradient(90deg,var(--p1),var(--p2));width:0%;transition:width .5s ease}
-#QB{background:#ffffff;
-  border:4px solid var(--bc);           /* ← ЖЁЛТАЯ РАМКА */
-  border-radius:18px;
-  padding:18px 24px;
-  text-align:center;
-  max-width:820px;
-  margin:0 auto;
-
-  /* ВАЖНО: делаем рамку "чёткой" */
-  box-sizing:border-box;
-  outline:2px solid rgba(255,204,0,0.35); /* мягкое свечение жёлтым */
-  outline-offset:0;
-
-  box-shadow:
-    0 10px 25px rgba(0,0,0,.25),
-    0 0 0 2px rgba(255,204,0,.15);
-
-  pointer-events:auto;
-  animation:pi .5s;
-}
-#QT{font-size:var(--fq);color:#333;font-weight:900}
-#LB{position:absolute;top:20px;right:20px;display:flex;gap:10px;pointer-events:none}
-.h{width:50px;height:50px;background-size:contain;background-repeat:no-repeat;background-position:center;display:inline-block;transition:transform .3s ease;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
-.h.br{animation:hba 2.5s forwards ease-out;z-index:100;position:relative}
-@keyframes hba{0%{transform:scale(1);opacity:1;filter:brightness(1)}10%{transform:scale(1.1) rotate(-5deg);filter:brightness(2) sepia(1)}100%{transform:translateY(-150px) scale(1.2) rotate(-20deg);opacity:0;filter:blur(10px) grayscale(1)}}
-#H{position:absolute;bottom:30px;width:150px;height:190px;background-repeat:no-repeat;background-position:center;background-size:contain;transform-origin:center bottom;transition:transform .1s linear;z-index:5}
-.f{position:absolute;top:-100px;display:flex;justify-content:center;align-items:center;background-size:contain;background-repeat:no-repeat;background-position:center;will-change:top;z-index:4}
-.il{background:var(--cbg);color:var(--cl);padding:4px 8px;border-radius:4px;font-size:var(--fa);font-weight:900;white-space:nowrap;margin-top:-60px;text-shadow:0 0 2px #000;border:1px solid rgba(255,255,255,.3)}
-.cf{position:absolute;width:10px;height:10px;top:-10px;z-index:25;pointer-events:none;opacity:0}
-@keyframes cfa{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
-.ss{animation:sha .5s}
-@keyframes sha{0%{transform:translate(1px,1px) rotate(0deg)}10%{transform:translate(-1px,-2px) rotate(-1deg)}30%{transform:translate(3px,2px) rotate(0deg)}50%{transform:translate(-1px,2px) rotate(-1deg)}70%{transform:translate(3px,1px) rotate(-1deg)}90%{transform:translate(1px,2px) rotate(0deg)}100%{transform:translate(1px,-2px) rotate(-1deg)}}
-.ov{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:20;opacity:1;transition:opacity .3s}
-.ov.hd{opacity:0;pointer-events:none}
-.md{background:#fff;padding:30px;border-radius:20px;text-align:center;max-width:420px;border:4px solid var(--bc);box-shadow:0 0 30px rgba(0,0,0,.5)}
-.md h1{color:#333;margin-bottom:10px}.md p{color:#555;font-size:18px;margin-bottom:20px;white-space:pre-line}
-button.bp{background:linear-gradient(to bottom,var(--bc),#ff9900);border:none;padding:12px 30px;font-size:20px;border-radius:30px;cursor:pointer;font-weight:1000;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .1s}
-button.bp:active{transform:scale(.95)}
-.ft{position:absolute;font-weight:1000;font-size:24px;pointer-events:none;animation:fu 1s forwards;z-index:15;text-shadow:2px 2px 0 #000}
-@keyframes fu{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
-@keyframes pi{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+/* --- РЕДАКТОР --- */
+:root{--primary:#8e44ad;--bg:#fdfefe;--panel-w:400px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Roboto',sans-serif;height:100vh;display:flex;overflow:hidden;background:var(--bg)}
+.editor-panel{width:var(--panel-w);background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column;z-index:10}
+.editor-header{padding:15px;background:#2c3e50;color:#fff}.editor-header h2{font-size:18px;margin:0}
+.tabs{display:flex;background:#34495e}.tab{flex:1;text-align:center;padding:10px;color:#bdc3c7;cursor:pointer;font-size:13px;border-bottom:3px solid transparent}.tab.active{color:#fff;border-bottom-color:var(--primary);background:#2c3e50}
+.settings-content{flex:1;overflow-y:auto;padding:15px}.section{display:none}.section.active{display:block}
+.form-group{margin-bottom:10px}.form-group label{display:block;font-size:11px;font-weight:700;color:#7f8c8d;margin-bottom:4px;text-transform:uppercase}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px}
+.form-group input[type="color"]{height:30px;padding:2px;cursor:pointer}.form-group input[type="range"]{width:100%;cursor:pointer}
+.form-row{display:flex;gap:10px}.q-item{background:#f8f9fa;border:1px solid #e9ecef;padding:8px;border-radius:6px;margin-bottom:8px;position:relative}
+.btn-remove-q{position:absolute;top:2px;right:5px;color:red;cursor:pointer;font-size:16px;font-weight:bold}
+.btn-add{width:100%;padding:8px;background:#f4ecf7;border:1px dashed #8e44ad;color:#8e44ad;cursor:pointer;font-weight:700}
+.editor-footer{padding:15px;border-top:1px solid #ddd;background:#fff}
+.btn-generate{width:100%;padding:12px;background:linear-gradient(135deg,#8e44ad,#9b59b6);color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer}
+.preview-area{flex:1;background:#ecf0f1;padding:20px;display:flex;align-items:center;justify-content:center}
+#game-preview-container{width:960px;height:540px;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden}
+#game-frame{width:100%;height:100%;border:none}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;display:none;align-items:center;justify-content:center}
+.code-modal{background:#fff;padding:20px;border-radius:8px;width:600px;max-width:90%;display:flex;flex-direction:column;gap:10px}
+.code-modal textarea{width:100%;height:300px;font-family:monospace;padding:10px;font-size:11px}
+.modal-btns{display:flex;justify-content:flex-end;gap:10px}
 </style>
 </head>
 <body>
-<div id="GC">
-  <div id="UI">
-    <div class="tb">
-      <button id="PB">||</button>
-      <div class="pc"><div id="PF" class="pf"></div></div>
+<div class="editor-panel">
+    <div class="editor-header"><h2>✨ Конструктор v46 (Stable)</h2></div>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('content')">Вопросы</div>
+        <div class="tab" onclick="switchTab('graphics')">Графика</div>
+        <div class="tab" onclick="switchTab('style')">Стиль</div>
+        <div class="tab" onclick="switchTab('text')">Тексты</div>
     </div>
-    <div id="LB"></div>
-    <div id="QB"><div id="QT">...</div></div>
-  </div>
-
-  <div id="H"></div>
-
-  <div id="OS" class="ov"><div class="md"><h1>${escapeHtml(cfg.txtTitle)}</h1><p>${escapeHtml(cfg.txtDesc)}</p><button class="bp" id="BS">ИГРАТЬ</button></div></div>
-  <div id="OP" class="ov hd"><div class="md"><h1>Пауза</h1><p>Игра приостановлена</p><button class="bp" id="BR">ПРОДОЛЖИТЬ</button></div></div>
-  <div id="OG" class="ov hd"><div class="md"><h1 style="color:#d9534f">${escapeHtml(cfg.txtLose)}</h1><p>${escapeHtml(cfg.txtLoseSub)}</p><button class="bp" id="BRe">ЕЩЕ РАЗ</button></div></div>
-  <div id="OW" class="ov hd"><div class="md"><h1 style="color:#5cb85c">${escapeHtml(cfg.txtWin)}</h1><p>${escapeHtml(cfg.txtWinSub)}</p><button class="bp" id="BRst">ЕЩЁ РАЗ</button></div></div>
+    <div class="settings-content">
+        <div id="tab-content" class="section active">
+            <div id="questions-list"></div><button class="btn-add" onclick="addQuestion()">+ Вопрос</button>
+        </div>
+        <div id="tab-graphics" class="section">
+            <div class="form-group"><label>Герой (URL)</label><input type="text" id="img-hero" onchange="u()"></div>
+            <div class="form-group"><label>Бомба (URL)</label><input type="text" id="img-bomb" onchange="u()"></div>
+            <div class="form-group"><label>Жизни (URL)</label><input type="text" id="img-life" onchange="u()"></div>
+            <div class="form-row">
+                <div class="form-group" style="flex:1"><label>Верный (Фон)</label><input type="text" id="img-correct" onchange="u()"></div>
+                <div class="form-group" style="flex:1"><label>Неверный (Фон)</label><input type="text" id="img-wrong" onchange="u()"></div>
+            </div>
+        </div>
+        <div id="tab-style" class="section">
+            <div class="form-group"><label style="color:#9b59b6">Скорость: <span id="sd">2</span></label><input type="range" id="conf-speed" min="1" max="10" step="0.5" value="2" oninput="document.getElementById('sd').innerText=this.value;u()"></div>
+            <div class="form-group"><label>Шрифт</label><select id="font-family" onchange="u()"><option value="Ruslan Display">Ruslan Display</option><option value="Roboto">Roboto</option><option value="Pacifico">Pacifico</option><option value="Arial">Arial</option></select></div>
+            <div class="form-row"><div class="form-group"><label>Размер Вопроса</label><input type="number" id="fs-q" value="28" onchange="u()"></div><div class="form-group"><label>Размер Ответа</label><input type="number" id="fs-a" value="20" onchange="u()"></div></div>
+            
+            <div class="form-group"><label>🎨 Цвет ФОНА ОКНА</label><input type="color" id="col-win-bg" value="#111111" onchange="u()"></div>
+            <div class="form-group"><label>✨ Цвет РАМКИ / КНОПКИ</label><input type="color" id="col-border" value="#a29bfe" onchange="u()"></div>
+            
+            <div class="form-row"><div class="form-group" style="flex:1"><label>Текст Ответа</label><input type="color" id="col-lt" value="#ffffff" onchange="u()"></div><div class="form-group" style="flex:1"><label>Фон Ответа</label><input type="color" id="col-lb" value="#000000" onchange="u()"></div></div>
+            <div class="form-row"><div class="form-group" style="flex:1"><label>Прогресс 1</label><input type="color" id="col-p1" value="#9b59b6" onchange="u()"></div><div class="form-group" style="flex:1"><label>Прогресс 2</label><input type="color" id="col-p2" value="#8e44ad" onchange="u()"></div></div>
+        </div>
+        <div id="tab-text" class="section">
+            <div class="form-group"><label>Заголовок</label><input type="text" id="tt" value="ПОЙМАЙ МАРШМЕЛЛОУ" onchange="u()"></div>
+            <div class="form-group"><label>Описание</label><textarea id="td" rows="2" onchange="u()">Используй ← или → чтобы поймать правильные ответы. Избегай горелых маршмеллоу!</textarea></div>
+            <div class="form-group"><label>Победа</label><input type="text" id="tw" value="ПОБЕДА!" onchange="u()"></div>
+            <div class="form-group"><label>Поражение</label><input type="text" id="tl" value="Ой!" onchange="u()"></div>
+        </div>
+    </div>
+    <div class="editor-footer"><button class="btn-generate" onclick="gen()">📦 ПОЛУЧИТЬ КОД</button></div>
 </div>
-
-<audio id="SC" src=""></audio><audio id="SW" src=""></audio><audio id="SWin" src=""></audio><audio id="SL" src=""></audio>
+<div class="preview-area"><div id="game-preview-container"><iframe id="game-frame"></iframe></div></div>
+<div id="modal-code" class="modal-overlay"><div class="code-modal"><h3>Код готов!</h3><p>Вставьте в Genially (Insert -> Others).</p><textarea id="final-code" readonly></textarea><div class="modal-btns"><button onclick="document.getElementById('modal-code').style.display='none'">Закрыть</button><button onclick="copy()">Копировать</button></div></div></div>
 
 <script>
-const G={li:"${cfg.life}",hi:"${cfg.hero}",bi:"${cfg.bomb}",gc:"${cfg.giftC}",gw:"${cfg.giftW}",hs:6,fs:${cfg.speed},si:900,ml:3,qs:${qJSON}};
-let st={run:0,pau:0,q:0,l:G.ml,hx:0,hf:0,ao:[],lt:0,tm:0,af:0,k:{l:0,r:0}};
-const E={c:document.getElementById('GC'),h:document.getElementById('H'),lc:document.getElementById('LB'),qt:document.getElementById('QT'),pf:document.getElementById('PF'),
-ov:{s:document.getElementById('OS'),p:document.getElementById('OP'),g:document.getElementById('OG'),w:document.getElementById('OW')},
-b:{p:document.getElementById('PB'),r:document.getElementById('BR')}};
+const def={h:"https://img.genially.com/684ea2da1b51060014c50e97/ea80b435-14c0-4490-b057-d9b367d6d8b8.png",b:"https://img.genially.com/684ea2da1b51060014c50e97/1100a032-bbfa-469f-aa6c-454364216500.png",l:"https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif",gc:"https://img.genially.com/684ea2da1b51060014c50e97/6caada9a-c539-4f5d-952c-c63df7c459f4.png",gw:"https://img.genially.com/684ea2da1b51060014c50e97/152eafba-7d36-41e3-9026-b78a900821bd.png",qs:[{t:"Для 6 гирлянд надо 48 фонариков...",c:"88",w:"42, 56"}]};
+const fonts={"Roboto":"https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap","Pacifico":"https://fonts.googleapis.com/css2?family=Pacifico&display=swap","Ruslan Display":"https://fonts.googleapis.com/css2?family=Ruslan+Display&display=swap","Arial":""};
 
-function init(){E.h.style.backgroundImage=\`url("\${G.hi}")\`;sl();rs();uu(1);}
-function sg(){if(st.af)cancelAnimationFrame(st.af);clearInterval(st.tm);document.querySelectorAll('.cf').forEach(c=>c.remove());st.l=G.ml;st.q=0;st.ao.forEach(o=>o.el.remove());st.ao=[];st.run=1;st.pau=0;st.lt=performance.now();uu(1);lq(0);ho();st.af=requestAnimationFrame(gl);st.tm=setInterval(spl,G.si);}
-function tp(){if(!st.run)return;st.pau=!st.pau;if(st.pau){clearInterval(st.tm);E.ov.p.classList.remove('hd');}else{E.ov.p.classList.add('hd');st.lt=performance.now();st.tm=setInterval(spl,G.si);st.af=requestAnimationFrame(gl);}}
-function lq(i){if(i>=G.qs.length){wg();return;}const q=G.qs[i];E.qt.textContent=q.text;const b=document.getElementById('QB');b.style.animation='none';b.offsetHeight;b.style.animation='pi .5s';}
-function gl(t){if(!st.run||st.pau)return;const dt=(t-st.lt)/16;st.lt=t;uh(dt);uo(dt);st.af=requestAnimationFrame(gl);}
-function uh(dt){const s=G.hs*dt,r=E.c.getBoundingClientRect(),hw=E.h.offsetWidth;if(st.k.l){st.hx-=s;st.hf=1;}if(st.k.r){st.hx+=s;st.hf=0;}if(st.hx<0)st.hx=0;if(st.hx>r.width-hw)st.hx=r.width-hw;E.h.style.left=st.hx+"px";E.h.style.transform=\`scaleX(\${st.hf?-1:1})\`;}
-function uo(dt){const gr=E.c.getBoundingClientRect(),hr=E.h.getBoundingClientRect(),hb={l:hr.left+20,r:hr.right-20,t:hr.top+30,b:hr.bottom};for(let i=st.ao.length-1;i>=0;i--){if(i>=st.ao.length)break;const o=st.ao[i];if(!o)continue;o.y+=o.speed*dt;o.el.style.top=o.y+"px";if(o.y>gr.height){o.el.remove();st.ao.splice(i,1);continue;}const or=o.el.getBoundingClientRect();if(or.right>hb.l&&or.left<hb.r&&or.bottom>hb.t&&or.top<hb.b){hc(o,i);if(st.ao.length===0)break;}}}
-function spl(){if(!st.run||st.pau)return;if(st.q>=G.qs.length)return;const q=G.qs[st.q];if(!q)return;const r=Math.random();let t,tx,ic;if(r<.1){t='b';}else if(r<.5){t='a';ic=1;tx=q.correct[Math.floor(Math.random()*q.correct.length)]||"";}else{t='a';ic=0;tx=q.wrong[Math.floor(Math.random()*q.wrong.length)]||"";}cfo(t,tx,ic);}
-function cfo(t,tx,ic){const el=document.createElement('div');el.classList.add('f');const gw=E.c.offsetWidth,x=Math.random()*(gw-110)+20;el.style.left=x+"px";el.style.width="70px";el.style.height="70px";if(t==='b'){el.style.backgroundImage=\`url("\${G.bi}")\`;}else{el.style.backgroundImage=\`url("\${ic?G.gc:G.gw}")\`;const l=document.createElement('div');l.className='il';l.textContent=tx;el.appendChild(l);}E.c.appendChild(el);st.ao.push({el:el,x:x,y:-100,speed:Number(G.fs)+Math.random()*1.5,type:t,ic:ic});}
-function hc(o,i){o.el.remove();st.ao.splice(i,1);const hr=E.h.getBoundingClientRect(),cx=hr.left+hr.width/2;if(o.type==='b'){ps('SW');td();ss();sft("-1 ❤️",cx,hr.top,"red");}else{if(o.ic){ps('SC');sft("Верно!",cx,hr.top,"#4caf50");nl();}else{ps('SW');td();sft("Ошибка!",cx,hr.top,"orange");}}}
-function nl(){st.ao.forEach(o=>o.el.remove());st.ao=[];st.q++;uu();if(st.q>=G.qs.length){wg();}else{lq(st.q);}}
-function td(){st.l--;uu();if(st.l<=0)go();}
-function uu(r=0){const c=E.lc;if(r){c.innerHTML='';for(let i=0;i<st.l;i++){const h=document.createElement('div');h.className='h';h.style.backgroundImage=\`url("\${G.li}")\`;c.appendChild(h);}}else{const ch=c.querySelectorAll('.h:not(.br)'),ct=st.l;if(ch.length>ct){for(let i=0;i<ch.length-ct;i++){const hb=ch[ch.length-1-i];if(hb){hb.classList.add('br');hb.addEventListener('animationend',()=>hb.remove(),{once:true});}}}}const p=G.qs.length>0?(st.q/G.qs.length)*100:0;E.pf.style.width=\`\${p}%\`;}
+window.onload=()=>{
+    document.getElementById('img-hero').value=def.h;document.getElementById('img-bomb').value=def.b;
+    document.getElementById('img-life').value=def.l;document.getElementById('img-correct').value=def.gc;
+    document.getElementById('img-wrong').value=def.gw;def.qs.forEach(q=>addQuestion(q.t,q.c,q.w));u();
+};
+function switchTab(id){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-'+id).classList.add('active');}
+function addQuestion(t="",c="",w=""){const d=document.createElement('div');d.className='q-item';d.innerHTML=`<div class="btn-remove-q" onclick="this.parentElement.remove();u()">×</div><input class="qt" placeholder="Вопрос" value="${t}" onchange="u()"><div class="form-row"><input class="qc" placeholder="Верно" value="${c}" style="border-color:#2ecc71" onchange="u()"><input class="qw" placeholder="Неверно" value="${w}" style="border-color:#e74c3c" onchange="u()"></div>`;document.getElementById('questions-list').appendChild(d);}
+function getCfg(){
+    const qs=[];document.querySelectorAll('.q-item').forEach(i=>{const t=i.querySelector('.qt').value;const c=i.querySelector('.qc').value.split(',').map(s=>s.trim()).filter(s=>s);const w=i.querySelector('.qw').value.split(',').map(s=>s.trim()).filter(s=>s);if(t)qs.push({text:t,correct:c,wrong:w});});
+    return {
+        sp:document.getElementById('conf-speed').value,h:document.getElementById('img-hero').value,b:document.getElementById('img-bomb').value,l:document.getElementById('img-life').value,gc:document.getElementById('img-correct').value,gw:document.getElementById('img-wrong').value,qs:qs,fn:document.getElementById('font-family').value,fq:document.getElementById('fs-q').value,fa:document.getElementById('fs-a').value,
+        bc:document.getElementById('col-border').value, 
+        wbg:document.getElementById('col-win-bg').value,
+        p1:document.getElementById('col-p1').value,p2:document.getElementById('col-p2').value,cl:document.getElementById('col-lt').value,lb:document.getElementById('col-lb').value,tt:document.getElementById('tt').value,td:document.getElementById('td').value,tw:document.getElementById('tw').value,tl:document.getElementById('tl').value,td:document.getElementById('td').value
+    };
+}
+function u(){const c=getCfg();const h=build(c);document.getElementById('game-frame').src=URL.createObjectURL(new Blob([h],{type:'text/html'}));}
+function gen(){const c=getCfg();document.getElementById('final-code').value=build(c);document.getElementById('modal-code').style.display='flex';}
+function copy(){const t=document.getElementById("final-code");t.select();document.execCommand("copy");alert("Скопировано!");}
+
+function build(c){
+    const fUrl=fonts[c.fn]; const fLink=fUrl?`<link href="${fUrl}" rel="stylesheet">`:'';
+    const qs=JSON.stringify(c.qs);
+    
+    // ВЕРСИЯ 46: СТАБИЛЬНАЯ (ИСПРАВЛЕН БАГ ДВИЖЕНИЯ И ЗВУКИ)
+    
+    let html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<link href="${fUrl}" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;user-select:none}
+html,body{width:100%;height:100%;background:transparent;font-family:'${c.fn}',sans-serif;margin:0;padding:0}
+#GC{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden}
+:root{--c:${c.bc};--bg:${c.wbg};--p1:${c.p1};--p2:${c.p2};--fq:${c.fq}px;--fa:${c.fa}px;--cl:${c.cl};--lb:${c.lb}}
+#UI{position:absolute;top:0;left:0;width:100%;padding:15px;z-index:10;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.tb{display:flex;align-items:center;justify-content:center;gap:15px;pointer-events:auto}
+#PB{width:40px;height:40px;border-radius:50%;border:2px solid #fff;background:var(--c);color:#fff;font-weight:700;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.1s}
+#PB:active{transform:scale(0.9)}
+.pc{flex:1;max-width:600px;height:20px;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.8);border-radius:10px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--p1),var(--p2));width:0%;transition:width 0.5s ease}
+#QB{background:#111;border:2px solid var(--c);box-shadow:0 0 10px var(--c);color:#fff;border-radius:18px;padding:18px 24px;text-align:center;max-width:820px;margin:0 auto;box-sizing:border-box;pointer-events:auto;animation:pi .5s}
+#QT{font-size:var(--fq);color:#fff;font-weight:700;text-shadow:0 0 5px var(--c);}
+#LB{position:absolute;top:20px;right:20px;display:flex;gap:10px;pointer-events:none}
+.h{width:50px;height:50px;background-size:contain;background-repeat:no-repeat;background-position:center;display:inline-block;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3))}
+.h.br{animation:hba 2.5s forwards ease-out;z-index:100;position:relative}
+@keyframes hba{0%{transform:scale(1);filter:brightness(1)}10%{transform:scale(1.1) rotate(-5deg);filter:brightness(2) sepia(1)}100%{transform:translateY(-150px) scale(1.2) rotate(-20deg);opacity:0}}
+#H{position:absolute;bottom:30px;width:150px;height:190px;background-repeat:no-repeat;background-position:center;background-size:contain;transform-origin:center bottom;transition:transform 0.1s linear;z-index:5}
+.f{position:absolute;top:-100px;display:flex;justify-content:center;align-items:center;background-size:contain;background-repeat:no-repeat;background-position:center;will-change:top;z-index:4}
+.il{background:var(--lb);color:var(--cl);padding:4px 8px;border-radius:4px;font-size:var(--fa);font-weight:700;white-space:nowrap;margin-top:-60px;text-shadow:0 0 2px #000;border:1px solid #ffffff50}
+.cf{position:absolute;width:10px;height:10px;background:#f00;top:-10px;z-index:25;pointer-events:none;opacity:0}
+@keyframes cfa{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+.ss{animation:sha 0.5s}
+@keyframes sha{0%{transform:translate(1px,1px)}10%{transform:translate(-1px,-2px) rotate(-1deg)}30%{transform:translate(3px,2px)}50%{transform:translate(-1px,2px) rotate(-1deg)}70%{transform:translate(3px,1px) rotate(-1deg)}90%{transform:translate(1px,2px)}100%{transform:translate(1px,-2px) rotate(-1deg)}}
+.ov{position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:20;transition:0.3s;padding:15px;box-sizing:border-box}
+.ov.hd{opacity:0;pointer-events:none}
+
+.md {
+  background: var(--bg);
+  border: 3px solid var(--c);
+  box-shadow: 0 0 30px var(--c), inset 0 0 30px rgba(0,0,0,0.6);
+  border-radius: 25px;
+  width: 95%;
+  max-width: 750px;
+  height: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 40px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  text-align: center; 
+}
+
+.md h1 {
+    color: #fff; 
+    margin: 0 0 15px 0; 
+    font-size: 32px; 
+    text-transform: uppercase;
+    text-shadow: 0 0 10px var(--c);
+    width: 100%; 
+}
+
+.md p {
+    color: #eee; 
+    font-size: 18px; 
+    margin: 0 0 30px 0; 
+    white-space: pre-line;
+    line-height: 1.5;
+    width: 100%;
+}
+
+.game-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  max-width: 250px;
+  min-width: 160px;
+  height: 50px;     
+  padding: 0 30px;
+  background: var(--c); 
+  border-radius: 50px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 18px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 15px var(--c);
+  transition: all 0.1s;
+  user-select: none;
+  border: 2px solid #fff;
+  line-height: 1 !important; 
+}
+.game-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px var(--c);
+}
+.game-btn:active {
+  transform: scale(0.95);
+}
+
+.ft{position:absolute;font-weight:700;font-size:24px;pointer-events:none;animation:fu 1s forwards;z-index:15;text-shadow:2px 2px 0 #000}
+@keyframes fu{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
+@keyframes pi{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body><div id="GC"><div id="UI"><div class="tb"><button id="PB">||</button><div class="pc"><div id="PF" class="pf"></div></div></div><div id="LB"></div><div id="QB"><div id="QT">...</div></div></div><div id="H"></div><div id="O" class="ov"><div class="md"><h1 id="OT"></h1><p id="OD"></p><div id="OB" class="game-btn">OK</div></div></div></div>
+<audio id="SC" src=""></audio><audio id="SW" src=""></audio><audio id="SWin" src=""></audio><audio id="SL" src=""></audio>
+<script>
+(function(){
+const C={li:"${c.l}",hi:"${c.h}",bi:"${c.b}",gc:"${c.gc}",gw:"${c.gw}",hs:6,fs:${c.sp},si:900,ml:3,qs:${qs},tx:{t:"${c.tt}",d:"${c.td}",w:"${c.tw}",l:"${c.tl}"}};
+let s={rn:0,pa:0,qi:0,lv:C.ml,hx:0,hf:0,ao:[],lt:0,tm:0,af:0,k:{l:0,r:0}};
+const D=document,E={c:D.getElementById('GC'),h:D.getElementById('H'),l:D.getElementById('LB'),qt:D.getElementById('QT'),pf:D.getElementById('PF'),o:D.getElementById('O'),ot:D.getElementById('OT'),od:D.getElementById('OD'),ob:D.getElementById('OB'),pb:D.getElementById('PB')};
+function I(){E.h.style.backgroundImage='url("'+C.hi+'")';ev();rs();uu(1);so(0);}
+function so(m){E.o.classList.remove('hd');if(m===0){stt(C.tx.t,C.tx.d,"ИГРАТЬ",sg);}else if(m===1){stt("Пауза","Игра на паузе","ПРОДОЛЖИТЬ",tp);}else if(m===2){stt(C.tx.l,"","ЕЩЕ РАЗ",sg);ps('snd-lose');}else if(m===3){stt(C.tx.w,"","ЕЩЕ РАЗ",sg);ps('snd-win');fc();}}
+function stt(t,d,b,f){E.ot.innerText=t;E.od.innerText=d;E.ob.innerText=b;E.ob.onclick=f;}
+function ho(){E.o.classList.add('hd');}
+function sg(){if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);D.querySelectorAll('.cf').forEach(c=>c.remove());s.lv=C.ml;s.qi=0;s.ao.forEach(o=>o.el.remove());s.ao=[];s.rn=1;s.pa=0;s.lt=performance.now();uu(1);lq(0);ho();s.af=requestAnimationFrame(gl);s.tm=setInterval(spl,C.si);}
+function tp(){if(!s.rn)return;s.pa=!s.pa;if(s.pa){clearInterval(s.tm);so(1);}else{ho();s.lt=performance.now();s.tm=setInterval(spl,C.si);s.af=requestAnimationFrame(gl);}}
+function lq(i){if(i>=C.qs.length){wg();return;}const q=C.qs[i];E.qt.textContent=q.text;const b=D.getElementById('QB');b.style.animation='none';b.offsetHeight;b.style.animation='pi 0.5s';}
+function gl(t){if(!s.rn||s.pa)return;const dt=(t-s.lt)/16;s.lt=t;uh(dt);uo(dt);s.af=requestAnimationFrame(gl);}
+function uh(dt){const sp=C.hs*dt,r=E.c.getBoundingClientRect(),hw=E.h.offsetWidth;if(s.k.l){s.hx-=sp;s.hf=1;}if(s.k.r){s.hx+=sp;s.hf=0;}if(s.hx<0)s.hx=0;if(s.hx>r.width-hw)s.hx=r.width-hw;E.h.style.left=s.hx+"px";E.h.style.transform='scaleX('+(s.hf?-1:1)+')';}
+function uo(dt){const gr=E.c.getBoundingClientRect(),hr=E.h.getBoundingClientRect(),hb={l:hr.left+20,r:hr.right-20,t:hr.top+30,b:hr.bottom};for(let i=s.ao.length-1;i>=0;i--){if(i>=s.ao.length)break;const o=s.ao[i];if(!o)continue;o.y+=o.sp*dt;o.el.style.top=o.y+"px";if(o.y>gr.height){o.el.remove();s.ao.splice(i,1);continue;}const or=o.el.getBoundingClientRect();if(or.right>hb.l&&or.left<hb.r&&or.bottom>hb.t&&or.top<hb.b){hc(o,i);if(s.ao.length===0)break;}}}
+function spl(){if(!s.rn||s.pa)return;if(s.qi>=C.qs.length)return;const q=C.qs[s.qi];if(!q)return;const r=Math.random();let t,tx,ic;if(r<0.1){t='b';}else if(r<0.5){t='a';ic=1;tx=q.correct[Math.floor(Math.random()*q.correct.length)];}else{t='a';ic=0;tx=q.wrong[Math.floor(Math.random()*q.wrong.length)];}cfo(t,tx,ic);}
+function cfo(t,tx,ic){const el=D.createElement('div');el.classList.add('f');const gw=E.c.offsetWidth,x=Math.random()*(gw-110)+20;el.style.left=x+"px";el.style.width="70px";el.style.height="70px";if(t==='b'){el.style.backgroundImage='url("'+C.bi+'")';}else{el.style.backgroundImage='url("'+(ic?C.gc:C.gw)+'")';const l=D.createElement('div');l.className='il';l.textContent=tx;el.appendChild(l);}E.c.appendChild(el);s.ao.push({el:el,x:x,y:-100,sp:Number(C.fs)+Math.random()*1.5,type:t,ic:ic});}
+function hc(o,i){o.el.remove();s.ao.splice(i,1);const hr=E.h.getBoundingClientRect(),cx=hr.left+hr.width/2;if(o.type==='b'){ps('snd-bomb');td();ss();sft("-1 ❤️",cx,hr.top,"red");}else{if(o.ic){ps('snd-correct');sft("Верно!",cx,hr.top,"#4caf50");nl();}else{ps('snd-wrong');td();sft("Ошибка!",cx,hr.top,"orange");}}}
+function nl(){s.ao.forEach(o=>o.el.remove());s.ao=[];s.qi++;uu();if(s.qi>=C.qs.length){wg();}else{lq(s.qi);}}
+function td(){s.lv--;uu();if(s.lv<=0)go();}
+function uu(r=0){const c=E.l;if(r){c.innerHTML='';for(let i=0;i<s.lv;i++){const h=D.createElement('div');h.className='h';h.style.backgroundImage='url("'+C.li+'")';c.appendChild(h);}}else{const ch=c.querySelectorAll('.h:not(.br)'),ct=s.lv;if(ch.length>ct){for(let i=0;i<ch.length-ct;i++){const hb=ch[ch.length-1-i];if(hb){hb.classList.add('br');hb.addEventListener('animationend',()=>hb.remove(),{once:true});}}}}const p=C.qs.length>0?(s.qi/C.qs.length)*100:0;E.pf.style.width=p+'%';}
 function ss(){E.c.classList.remove('ss');void E.c.offsetWidth;E.c.classList.add('ss');}
-function sft(t,x,y,c){const e=document.createElement('div');e.className='ft';e.textContent=t;e.style.color=c;e.style.left=x+"px";e.style.top=y+"px";document.body.appendChild(e);setTimeout(()=>e.remove(),1000);}
-function ps(i){const a=document.getElementById(i);if(a&&a.src)a.currentTime=0;}
-function go(){st.run=0;if(st.af)cancelAnimationFrame(st.af);clearInterval(st.tm);ps('SL');E.ov.g.classList.remove('hd');}
-function wg(){st.run=0;if(st.af)cancelAnimationFrame(st.af);clearInterval(st.tm);ps('SWin');E.pf.style.width='100%';E.ov.w.classList.remove('hd');fc();}
-function fc(){const c=['#d13447','#ffbf00','#263672','#7b2cbf','#8ac926','#1982c4'];for(let i=0;i<150;i++){const e=document.createElement('div');e.className='cf';e.style.backgroundColor=c[Math.floor(Math.random()*c.length)];e.style.left=Math.random()*100+'vw';const d=Math.random()*3+2;e.style.animation=\`cfa \${d}s linear forwards\`;e.style.animationDelay=Math.random()*2+'s';const s=Math.random()*10+5;e.style.width=s+'px';e.style.height=s*.6+'px';E.c.appendChild(e);}}
-function ho(){Object.values(E.ov).forEach(e=>e.classList.add('hd'));}
-function rs(){st.hx=(E.c.offsetWidth-100)/2;E.h.style.left=st.hx+"px";}
-function sl(){window.addEventListener('resize',rs);window.addEventListener('keydown',e=>{if(e.code==='Space')tp();if(e.code==='ArrowLeft'||e.code==='KeyA')st.k.l=1;if(e.code==='ArrowRight'||e.code==='KeyD')st.k.r=1;});window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')st.k.l=0;if(e.code==='ArrowRight'||e.code==='KeyD')st.k.r=0;});document.getElementById('BS').addEventListener('click',sg);document.getElementById('BRe').addEventListener('click',sg);document.getElementById('BRst').addEventListener('click',sg);E.b.p.addEventListener('click',tp);E.b.r.addEventListener('click',tp);}
-init();
-<\/script>
-</body>
-</html>`;
-
-      if (minify) return html.replace(/\n/g,'').replace(/\s+/g,' ').replace(/> </g,'><').trim();
-      return html;
-    }
-  </script>
+function sft(t,x,y,c){const e=D.createElement('div');e.className='ft';e.textContent=t;e.style.color=c;e.style.left=x+"px";e.style.top=y+"px";D.body.appendChild(e);setTimeout(()=>e.remove(),1000);}
+function ps(i){const a=new Audio();
+if(i=='snd-correct')a.src='https://zvukipro.com/uploads/files/2018-10/1540309251_jg-032316-sfx-video-game-retro-8-bit-coin-pickup-1.mp3';
+if(i=='snd-wrong')a.src='https://zvukipro.com/uploads/files/2018-10/1540309327_jg-032316-sfx-video-game-retro-8-bit-error-tone.mp3';
+if(i=='snd-bomb')a.src='https://actions.google.com/sounds/v1/impacts/crash_heavy_short.ogg';
+if(i=='snd-lose')a.src='https://zvukipro.com/uploads/files/2021-02/1612773299_fail-sound-effect.mp3';
+if(i=='snd-win')a.src='https://zvukipro.com/uploads/files/2020-07/1594279589_claps.mp3';a.play().catch(e=>{});}
+function go(){s.rn=0;if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);so(2);}
+function wg(){s.rn=0;if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);E.pf.style.width='100%';so(3);}
+function fc(){const c=['#d13447','#ffbf00','#263672','#7b2cbf','#8ac926','#1982c4'];for(let i=0;i<150;i++){const e=D.createElement('div');e.className='cf';e.style.backgroundColor=c[Math.floor(Math.random()*c.length)];e.style.left=Math.random()*100+'vw';const d=Math.random()*3+2;e.style.animation=\`cfa \${d}s linear forwards\`;e.style.animationDelay=Math.random()*2+'s';const s=Math.random()*10+5;e.style.width=s+'px';e.style.height=s*0.6+'px';E.c.appendChild(e);}}
+function rs(){s.hx=(E.c.offsetWidth-100)/2;E.h.style.left=s.hx+"px";}
+function ev(){
+    window.addEventListener('resize',rs);
+    window.addEventListener('keydown',e=>{if(e.code==='Space')tp();if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=1;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=1;});
+    window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=0;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=0;}); // ИСПРАВЛЕНО
+    E.pb.addEventListener('click',tp);E.ob.addEventListener('click',tp);}
+I();})();
+<\/script></body></html>`;
+    return html;
+}
+</script>
 </body>
 </html>

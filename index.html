@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Builder v59 (Separate Sizes)</title>
+<title>Builder v61 (Random Skins)</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Pacifico&family=Ruslan+Display&family=Montserrat:wght@600;800&family=Press+Start+2P&family=Lobster&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
 <style>
 /* --- ДИЗАЙН РЕДАКТОРА --- */
@@ -13,7 +13,7 @@
     --text-main: #2d3436;
     --text-muted: #636e72;
     --gradient: linear-gradient(135deg, #6c5ce7, #a29bfe);
-    --panel-w: 420px; 
+    --panel-w: 430px; 
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
@@ -59,7 +59,7 @@ body { font-family: 'Roboto', sans-serif; height: 100vh; display: flex; overflow
     padding: 15px 0;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     border-bottom: 3px solid transparent;
     transition: 0.3s;
@@ -80,7 +80,6 @@ body { font-family: 'Roboto', sans-serif; height: 100vh; display: flex; overflow
 .section.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Информационная плашка */
 .info-box {
     background: #e3f2fd;
     border-left: 4px solid #2196f3;
@@ -103,16 +102,8 @@ body { font-family: 'Roboto', sans-serif; height: 100vh; display: flex; overflow
     letter-spacing: 0.5px;
 }
 
-/* СТИЛИ ДЛЯ ЗАГРУЗКИ ФАЙЛОВ */
-.file-upload-row {
-    display: flex;
-    gap: 5px;
-}
-.file-upload-row input[type="text"] {
-    flex: 1;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
+.file-upload-row { display: flex; gap: 5px; }
+.file-upload-row input[type="text"] { flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; }
 input[type="file"] { display: none; }
 .btn-upload {
     background: #dfe6e9;
@@ -122,158 +113,78 @@ input[type="file"] { display: none; }
     border-bottom-right-radius: 8px;
     padding: 0 12px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    transition: 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; transition: 0.2s;
 }
 .btn-upload:hover { background: #b2bec3; }
 
 .form-group input, .form-group textarea, .form-group select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 2px solid #e6e6e6;
-    border-radius: 8px;
-    font-size: 14px;
-    background: #fff;
-    color: var(--text-main);
-    transition: 0.2s;
+    width: 100%; padding: 10px 12px; border: 2px solid #e6e6e6; border-radius: 8px;
+    font-size: 14px; background: #fff; color: var(--text-main); transition: 0.2s;
     font-family: 'Roboto', sans-serif;
 }
 .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
 }
 .form-group input[type="color"] { height: 40px; padding: 2px; cursor: pointer; }
 .form-group input[type="range"] { cursor: pointer; }
 .form-row { display: flex; gap: 10px; }
 
-/* Карточка вопроса */
 .q-item {
-    background: var(--card-bg);
-    border: none;
-    border-left: 5px solid var(--primary);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    position: relative;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    transition: transform 0.2s;
+    background: var(--card-bg); border: none; border-left: 5px solid var(--primary);
+    padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s;
 }
 .q-item:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
 
-.q-label {
-    display: block;
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-    color: #b2bec3;
-}
+.q-label { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; color: #b2bec3; }
 
 .btn-remove-q {
-    position: absolute;
-    top: 5px;
-    right: 8px;
-    color: #ff7675;
-    cursor: pointer;
-    font-size: 20px;
-    font-weight: bold;
-    transition: 0.2s;
+    position: absolute; top: 5px; right: 8px; color: #ff7675; cursor: pointer;
+    font-size: 20px; font-weight: bold; transition: 0.2s;
 }
 .btn-remove-q:hover { color: #d63031; transform: scale(1.2); }
 
 .btn-add {
-    width: 100%;
-    padding: 12px;
-    background: #fff;
-    border: 2px dashed var(--primary);
-    color: var(--primary);
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 13px;
-    transition: 0.2s;
+    width: 100%; padding: 12px; background: #fff; border: 2px dashed var(--primary);
+    color: var(--primary); border-radius: 8px; cursor: pointer; font-weight: 700;
+    text-transform: uppercase; font-size: 13px; transition: 0.2s;
 }
 .btn-add:hover { background: #f0f0ff; }
 
-.editor-footer {
-    padding: 20px;
-    border-top: 1px solid #e0e0e0;
-    background: #fff;
-}
+.editor-footer { padding: 20px; border-top: 1px solid #e0e0e0; background: #fff; }
 .btn-generate {
-    width: 100%;
-    padding: 14px;
-    background: var(--gradient);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
-    transition: 0.2s;
+    width: 100%; padding: 14px; background: var(--gradient); color: #fff; border: none;
+    border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px;
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4); transition: 0.2s;
 }
 .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(108, 92, 231, 0.5); }
 .btn-generate:active { transform: translateY(1px); }
 
 .preview-area {
-    flex: 1;
-    background: #dfe6e9;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-image: radial-gradient(#b2bec3 1px, transparent 1px);
+    flex: 1; background: #dfe6e9; padding: 20px; display: flex; align-items: center;
+    justify-content: center; background-image: radial-gradient(#b2bec3 1px, transparent 1px);
     background-size: 20px 20px;
 }
 #game-preview-container {
-    width: 960px;
-    height: 540px;
-    background: #fff;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-    border-radius: 12px;
-    overflow: hidden;
+    width: 960px; height: 540px; background: #fff; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    border-radius: 12px; overflow: hidden;
 }
 #game-frame { width: 100%; height: 100%; border: none; }
 
 .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(45, 52, 54, 0.9);
-    z-index: 1000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(5px);
+    position: fixed; inset: 0; background: rgba(45, 52, 54, 0.9); z-index: 1000;
+    display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
 }
 .code-modal {
-    background: #fff;
-    padding: 30px;
-    border-radius: 16px;
-    width: 600px;
-    max-width: 90%;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    background: #fff; padding: 30px; border-radius: 16px; width: 600px; max-width: 90%;
+    display: flex; flex-direction: column; gap: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
 .code-modal h3 { font-family: 'Montserrat', sans-serif; color: var(--text-main); }
 .code-modal textarea {
-    width: 100%;
-    height: 300px;
-    font-family: 'Consolas', monospace;
-    padding: 15px;
-    font-size: 12px;
-    background: #f1f2f6;
-    border: none;
-    border-radius: 8px;
-    color: #2f3542;
+    width: 100%; height: 300px; font-family: 'Consolas', monospace; padding: 15px;
+    font-size: 12px; background: #f1f2f6; border: none; border-radius: 8px; color: #2f3542;
 }
 .modal-btns { display: flex; justify-content: flex-end; gap: 10px; }
 .modal-btns button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
@@ -290,7 +201,7 @@ input[type="file"] { display: none; }
 
 <div class="editor-panel">
     <div class="editor-header">
-        <h2>🎮 Редактор игры "Поймай предмет"</h2>
+        <h2>🎮 Редактор "Поймай предмет"</h2>
     </div>
     
     <div class="tabs">
@@ -303,8 +214,8 @@ input[type="file"] { display: none; }
     <div class="settings-content">
         <div id="tab-content" class="section active">
             <div class="info-box">
-                ℹ️ <b>Совет:</b> Неправильные ответы перечисляйте <b>через запятую</b>.
-                <br><i>Пример: Париж, Берлин, Лондон</i>
+                ℹ️ <b>Совет:</b> И правильные, и неправильные ответы можно писать <b>через запятую</b>.<br>
+                <i>Пример верных: Яблоко, Груша, Слива</i>
             </div>
             <div id="questions-list"></div>
             <button class="btn-add" onclick="addQuestion()">+ Добавить вопрос</button>
@@ -314,14 +225,29 @@ input[type="file"] { display: none; }
             <div class="form-group"><label>Герой</label><div class="file-upload-row"><input type="text" id="img-hero" placeholder="Ссылка или файл" oninput="clearCache('hero'); u()"><label for="file-hero" class="btn-upload">📂</label><input type="file" id="file-hero" accept="image/*" onchange="encodeImg(this, 'hero')"></div></div>
             <div class="form-group"><label>Бомба</label><div class="file-upload-row"><input type="text" id="img-bomb" placeholder="Ссылка или файл" oninput="clearCache('bomb'); u()"><label for="file-bomb" class="btn-upload">📂</label><input type="file" id="file-bomb" accept="image/*" onchange="encodeImg(this, 'bomb')"></div></div>
             <div class="form-group"><label>Жизни</label><div class="file-upload-row"><input type="text" id="img-life" placeholder="Ссылка или файл" oninput="clearCache('life'); u()"><label for="file-life" class="btn-upload">📂</label><input type="file" id="file-life" accept="image/*" onchange="encodeImg(this, 'life')"></div></div>
+            
+            <div class="info-box" style="margin-top:10px; background:#fff3cd; border-color:#ffc107; color:#856404;">
+                ⚠️ <b>Важно:</b> Картинки ниже выбираются <b>случайно</b> для любого ответа (верного или неверного), чтобы запутать игрока!
+            </div>
+            
             <div class="form-row">
-                <div class="form-group" style="flex:1"><label>Верный (Фон)</label><div class="file-upload-row"><input type="text" id="img-correct" oninput="clearCache('correct'); u()"><label for="file-correct" class="btn-upload">📂</label><input type="file" id="file-correct" accept="image/*" onchange="encodeImg(this, 'correct')"></div></div>
-                <div class="form-group" style="flex:1"><label>Неверный (Фон)</label><div class="file-upload-row"><input type="text" id="img-wrong" oninput="clearCache('wrong'); u()"><label for="file-wrong" class="btn-upload">📂</label><input type="file" id="file-wrong" accept="image/*" onchange="encodeImg(this, 'wrong')"></div></div>
+                <div class="form-group" style="flex:1"><label>Картинка предмета (Вариант 1)</label><div class="file-upload-row"><input type="text" id="img-skin1" oninput="clearCache('skin1'); u()"><label for="file-skin1" class="btn-upload">📂</label><input type="file" id="file-skin1" accept="image/*" onchange="encodeImg(this, 'skin1')"></div></div>
+                <div class="form-group" style="flex:1"><label>Картинка предмета (Вариант 2)</label><div class="file-upload-row"><input type="text" id="img-skin2" oninput="clearCache('skin2'); u()"><label for="file-skin2" class="btn-upload">📂</label><input type="file" id="file-skin2" accept="image/*" onchange="encodeImg(this, 'skin2')"></div></div>
             </div>
         </div>
         
         <div id="tab-style" class="section">
-            <div class="form-group"><label style="color:var(--primary)">Скорость падения: <span id="sd">2</span></label><input type="range" id="conf-speed" min="1" max="10" step="0.5" value="2" oninput="document.getElementById('sd').innerText=this.value;u()"></div>
+            <div class="form-row">
+                <div class="form-group" style="flex:1">
+                    <label style="color:var(--primary)">Скорость падения</label>
+                    <input type="range" id="conf-speed" min="1" max="10" step="0.5" value="2" oninput="u()">
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label style="color:#0984e3">Частота предметов</label>
+                    <input type="range" id="conf-freq" min="300" max="2000" step="100" value="900" style="direction: rtl" oninput="u()">
+                    <div style="font-size:9px; color:#999">Влево - чаще, Вправо - реже</div>
+                </div>
+            </div>
             
             <div class="form-group" style="background:#fff; border:2px solid #eee; padding:10px; border-radius:8px;">
                 <label style="color:#2d3436; margin-bottom:10px; display:block; border-bottom:1px solid #eee; padding-bottom:5px;">📐 Размеры и Позиция</label>
@@ -412,8 +338,8 @@ const def={
     h:"https://img.genially.com/684ea2da1b51060014c50e97/4e2c4c8a-5a17-4c32-95e1-7cc360b44a84.png",
     b:"https://img.genially.com/684ea2da1b51060014c50e97/91910846-d855-4c4b-8561-5ff0edaa87ad.png",
     l:"https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif",
-    gc:"https://img.genially.com/684ea2da1b51060014c50e97/33b8d640-53fd-4b63-b5df-f7df01a72b2f.png",
-    gw:"https://img.genially.com/684ea2da1b51060014c50e97/5857090c-baea-4b09-bb56-cda2472b1b19.png",
+    sk1:"https://img.genially.com/684ea2da1b51060014c50e97/33b8d640-53fd-4b63-b5df-f7df01a72b2f.png",
+    sk2:"https://img.genially.com/684ea2da1b51060014c50e97/5857090c-baea-4b09-bb56-cda2472b1b19.png",
     qs:[{t:"Введите текст вопроса",c:"Ответ",w:"Напр: А, Б, В"}]
 };
 const fonts={
@@ -426,12 +352,12 @@ const fonts={
     "Arial":""
 };
 
-let imgCache = { hero: null, bomb: null, life: null, correct: null, wrong: null };
+let imgCache = { hero: null, bomb: null, life: null, skin1: null, skin2: null };
 
 window.onload=()=>{
     document.getElementById('img-hero').value=def.h;document.getElementById('img-bomb').value=def.b;
-    document.getElementById('img-life').value=def.l;document.getElementById('img-correct').value=def.gc;
-    document.getElementById('img-wrong').value=def.gw;def.qs.forEach(q=>addQuestion(q.t,q.c,q.w));u();
+    document.getElementById('img-life').value=def.l;document.getElementById('img-skin1').value=def.sk1;
+    document.getElementById('img-skin2').value=def.sk2;def.qs.forEach(q=>addQuestion(q.t,q.c,q.w));u();
 };
 function switchTab(id){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-'+id).classList.add('active');}
 
@@ -446,12 +372,12 @@ function addQuestion(t="",c="",w=""){
         </div>
         <div class="form-row">
             <div style="flex:1">
-                <label class="q-label" style="color:#2ecc71;">Верный</label>
-                <input class="qc" value="${c}" placeholder="Ответ" style="border-color:#2ecc71;width:100%" onchange="u()">
+                <label class="q-label" style="color:#2ecc71;">Верные (через запятую)</label>
+                <input class="qc" value="${c}" placeholder="Напр: 2, 4, 6" style="border-color:#2ecc71;width:100%" onchange="u()">
             </div>
             <div style="flex:1">
-                <label class="q-label" style="color:#e74c3c;">Неверные <span style="font-size:9px;opacity:0.7">(через запятую)</span></label>
-                <input class="qw" value="${w}" placeholder="Напр: А, Б, В" style="border-color:#e74c3c;width:100%" onchange="u()">
+                <label class="q-label" style="color:#e74c3c;">Неверные (через запятую)</label>
+                <input class="qw" value="${w}" placeholder="Напр: 1, 3, 5" style="border-color:#e74c3c;width:100%" onchange="u()">
             </div>
         </div>`;
     document.getElementById('questions-list').appendChild(d);
@@ -475,16 +401,17 @@ function getCfg(){
     const qs=[];document.querySelectorAll('.q-item').forEach(i=>{const t=i.querySelector('.qt').value;const c=i.querySelector('.qc').value.split(',').map(s=>s.trim()).filter(s=>s);const w=i.querySelector('.qw').value.split(',').map(s=>s.trim()).filter(s=>s);if(t)qs.push({text:t,correct:c,wrong:w});});
     return {
         sp:document.getElementById('conf-speed').value,
+        fr:document.getElementById('conf-freq').value, 
         h: imgCache.hero || document.getElementById('img-hero').value,
         b: imgCache.bomb || document.getElementById('img-bomb').value,
         l: imgCache.life || document.getElementById('img-life').value,
-        gc: imgCache.correct || document.getElementById('img-correct').value,
-        gw: imgCache.wrong || document.getElementById('img-wrong').value,
+        // ОБНОВЛЕНО: ТЕПЕРЬ ЭТО SKIN1 И SKIN2, А НЕ CORRECT/WRONG
+        i1: imgCache.skin1 || document.getElementById('img-skin1').value,
+        i2: imgCache.skin2 || document.getElementById('img-skin2').value,
         
-        // НОВЫЕ ПАРАМЕТРЫ РАЗМЕРА И ПОЗИЦИИ
         isz: document.getElementById('conf-size').value,
-        hsz: document.getElementById('conf-hero-size').value, // Размер героя
-        bsz: document.getElementById('conf-bomb-size').value, // Размер бомбы
+        hsz: document.getElementById('conf-hero-size').value, 
+        bsz: document.getElementById('conf-bomb-size').value, 
         tpos: document.getElementById('conf-tpos').value,
         
         qs:qs,fn:document.getElementById('font-family').value,fq:document.getElementById('fs-q').value,fa:document.getElementById('fs-a').value,
@@ -501,7 +428,7 @@ function build(c){
     const fUrl=fonts[c.fn]; const fLink=fUrl?`<link href="${fUrl}" rel="stylesheet">`:'';
     const qs=JSON.stringify(c.qs);
     
-    // ИГРОВОЙ ДВИЖОК V59
+    // ИГРОВОЙ ДВИЖОК V61 (RANDOM SKINS)
     let html = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -531,36 +458,30 @@ html,body{width:100%;height:100%;background:transparent;font-family:'${c.fn}',sa
 .h.br{animation:hba 2.5s forwards ease-out;z-index:100;position:relative}
 @keyframes hba{0%{transform:scale(1);filter:brightness(1)}10%{transform:scale(1.1) rotate(-5deg);filter:brightness(2) sepia(1)}100%{transform:translateY(-150px) scale(1.2) rotate(-20deg);opacity:0}}
 
-/* ГЕРОЙ: РАЗМЕР ИЗ ПЕРЕМЕННОЙ */
 #H{
     position:absolute;bottom:30px;
     width:var(--hsz);
-    height:var(--hsz); /* Квадратный контейнер для простоты */
+    height:var(--hsz); 
     background-repeat:no-repeat;background-position:center;background-size:contain;
     transform-origin:center bottom;transition:transform 0.1s linear;z-index:5
 }
 
-/* ПАДАЮЩИЙ ОБЪЕКТ (ОБЩИЙ) */
 .f{
     position:absolute;top:-100px;
     display:flex;justify-content:center;align-items:center; 
     background-size:contain;background-repeat:no-repeat;background-position:center;
     will-change:top;z-index:4;
 }
-
-/* РАЗДЕЛЕНИЕ РАЗМЕРОВ */
 .f.is-bomb { width: var(--bsz); height: var(--bsz); }
 .f.is-answer { width: var(--isz); height: var(--isz); }
 
-/* ТЕКСТ ВНУТРИ ПРЕДМЕТА */
 .il{
     background:var(--lb);color:var(--cl);
     padding:4px 8px;border-radius:4px;
     font-size:var(--fa);font-weight:700;
     white-space:nowrap;
     text-shadow:0 0 2px #000;border:1px solid #ffffff50;
-    position: relative; 
-    top: var(--tpos); 
+    position: relative; top: var(--tpos); 
 }
 
 .cf{position:absolute;width:10px;height:10px;background:#f00;top:-10px;z-index:25;pointer-events:none;opacity:0}
@@ -571,27 +492,14 @@ html,body{width:100%;height:100%;background:transparent;font-family:'${c.fn}',sa
 .ov.hd{opacity:0;pointer-events:none}
 
 .md {
-  background: var(--bg);
-  border: 3px solid var(--c);
+  background: var(--bg); border: 3px solid var(--c);
   box-shadow: 0 0 30px var(--c), inset 0 0 30px rgba(0,0,0,0.6);
-  border-radius: 25px;
-  width: 95%;
-  max-width: 750px;
-  height: auto;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-sizing: border-box;
-  padding: 40px;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
-  text-align: center; 
+  border-radius: 25px; width: 95%; max-width: 750px; height: auto; max-height: 90vh;
+  overflow-y: auto; box-sizing: border-box; padding: 40px; color: #fff;
+  display: flex; flex-direction: column; align-items: center; text-align: center; 
 }
-
 .md h1 { color: #fff; margin: 0 0 15px 0; font-size: 32px; text-transform: uppercase; text-shadow: 0 0 10px var(--c); width: 100%; }
 .md p { color: #eee; font-size: 18px; margin: 0 0 30px 0; white-space: pre-line; line-height: 1.5; width: 100%; }
-
 .game-btn {
   display: flex; align-items: center; justify-content: center;
   width: auto; max-width: 250px; min-width: 160px; height: 50px; padding: 0 30px;
@@ -601,7 +509,6 @@ html,body{width:100%;height:100%;background:transparent;font-family:'${c.fn}',sa
 }
 .game-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px var(--c); }
 .game-btn:active { transform: scale(0.95); }
-
 .ft{position:absolute;font-weight:700;font-size:24px;pointer-events:none;animation:fu 1s forwards;z-index:15;text-shadow:2px 2px 0 #000}
 @keyframes fu{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
 @keyframes pi{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
@@ -610,57 +517,37 @@ html,body{width:100%;height:100%;background:transparent;font-family:'${c.fn}',sa
 <body><div id="GC"><div id="UI"><div class="tb"><button id="PB">||</button><div class="pc"><div id="PF" class="pf"></div></div></div><div id="LB"></div><div id="QB"><div id="QT">...</div></div></div><div id="H"></div><div id="O" class="ov"><div class="md"><h1 id="OT"></h1><p id="OD"></p><div id="OB" class="game-btn">OK</div></div></div></div>
 <script>
 (function(){
-const C={li:"${c.l}",hi:"${c.h}",bi:"${c.b}",gc:"${c.gc}",gw:"${c.gw}",hs:6,fs:${c.sp},si:900,ml:3,qs:${qs},tx:{t:"${c.tt}",d:"${c.td}",w:"${c.tw}",l:"${c.tl}"}};
+const C={li:"${c.l}",hi:"${c.h}",bi:"${c.b}",i1:"${c.i1}",i2:"${c.i2}",hs:6,fs:${c.sp},si:${c.fr},ml:3,qs:${qs},tx:{t:"${c.tt}",d:"${c.td}",w:"${c.tw}",l:"${c.tl}"}};
 let s={rn:0,pa:0,qi:0,lv:C.ml,hx:0,hf:0,ao:[],lt:0,tm:0,af:0,k:{l:0,r:0}};
 const D=document,E={c:D.getElementById('GC'),h:D.getElementById('H'),l:D.getElementById('LB'),qt:D.getElementById('QT'),pf:D.getElementById('PF'),o:D.getElementById('O'),ot:D.getElementById('OT'),od:D.getElementById('OD'),ob:D.getElementById('OB'),pb:D.getElementById('PB')};
 
 const AC = window.AudioContext || window.webkitAudioContext;
 const ac = new AC();
-
 function tone(type, freq, dur, vol=0.1) {
     if(ac.state === 'suspended') ac.resume();
-    const o = ac.createOscillator();
-    const g = ac.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, ac.currentTime);
-    g.gain.setValueAtTime(vol, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + dur);
-    o.connect(g); g.connect(ac.destination);
-    o.start(); o.stop(ac.currentTime + dur);
+    const o = ac.createOscillator(); const g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, ac.currentTime);
+    g.gain.setValueAtTime(vol, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + dur);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + dur);
 }
-
 function playBoom() {
     if(ac.state === 'suspended') ac.resume();
     const b = ac.createBuffer(1, ac.sampleRate * 0.5, ac.sampleRate);
     const d = b.getChannelData(0);
     for(let i=0; i<b.length; i++) d[i] = Math.random() * 2 - 1;
-    const n = ac.createBufferSource();
-    n.buffer = b;
-    const f = ac.createBiquadFilter();
-    f.type = 'lowpass';
-    f.frequency.value = 800;
-    f.frequency.linearRampToValueAtTime(0, ac.currentTime + 0.5);
-    const g = ac.createGain();
-    g.gain.setValueAtTime(1, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.5);
-    n.connect(f); f.connect(g); g.connect(ac.destination);
-    n.start();
+    const n = ac.createBufferSource(); n.buffer = b;
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 800; f.frequency.linearRampToValueAtTime(0, ac.currentTime + 0.5);
+    const g = ac.createGain(); g.gain.setValueAtTime(1, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.5);
+    n.connect(f); f.connect(g); g.connect(ac.destination); n.start();
 }
-
 function playWin() { [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => setTimeout(() => tone('square', f, 0.3, 0.1), i * 100)); }
 function playLose() {
     if(ac.state === 'suspended') ac.resume();
-    const o = ac.createOscillator();
-    const g = ac.createGain();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(200, ac.currentTime);
-    o.frequency.linearRampToValueAtTime(50, ac.currentTime + 1);
-    g.gain.setValueAtTime(0.2, ac.currentTime);
-    g.gain.linearRampToValueAtTime(0, ac.currentTime + 1);
-    o.connect(g); g.connect(ac.destination);
-    o.start(); o.stop(ac.currentTime + 1);
+    const o = ac.createOscillator(); const g = ac.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(200, ac.currentTime); o.frequency.linearRampToValueAtTime(50, ac.currentTime + 1);
+    g.gain.setValueAtTime(0.2, ac.currentTime); g.gain.linearRampToValueAtTime(0, ac.currentTime + 1);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 1);
 }
-
 function ps(k) {
     if (k === 'b') playBoom();
     else if (k === 'c') { tone('sine', 1046.5, 0.1); setTimeout(() => tone('sine', 1568, 0.2), 100); }
@@ -675,7 +562,6 @@ function stt(t,d,b,f){
     E.ot.innerText=t;E.od.innerText=d;E.ob.innerText=b;
     E.ob.onclick = () => { if(ac.state === 'suspended') ac.resume(); f(); };
 }
-
 function ho(){E.o.classList.add('hd');}
 function sg(){if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);D.querySelectorAll('.cf').forEach(c=>c.remove());s.lv=C.ml;s.qi=0;s.ao.forEach(o=>o.el.remove());s.ao=[];s.rn=1;s.pa=0;s.lt=performance.now();uu(1);lq(0);ho();s.af=requestAnimationFrame(gl);s.tm=setInterval(spl,C.si);}
 function tp(){if(!s.rn)return;s.pa=!s.pa;if(s.pa){clearInterval(s.tm);so(1);}else{ho();s.lt=performance.now();s.tm=setInterval(spl,C.si);s.af=requestAnimationFrame(gl);}}
@@ -683,29 +569,28 @@ function lq(i){if(i>=C.qs.length){wg();return;}const q=C.qs[i];E.qt.textContent=
 function gl(t){if(!s.rn||s.pa)return;const dt=(t-s.lt)/16;s.lt=t;uh(dt);uo(dt);s.af=requestAnimationFrame(gl);}
 function uh(dt){const sp=C.hs*dt,r=E.c.getBoundingClientRect(),hw=E.h.offsetWidth;if(s.k.l){s.hx-=sp;s.hf=1;}if(s.k.r){s.hx+=sp;s.hf=0;}if(s.hx<0)s.hx=0;if(s.hx>r.width-hw)s.hx=r.width-hw;E.h.style.left=s.hx+"px";E.h.style.transform='scaleX('+(s.hf?-1:1)+')';}
 function uo(dt){const gr=E.c.getBoundingClientRect(),hr=E.h.getBoundingClientRect(),hb={l:hr.left+20,r:hr.right-20,t:hr.top+30,b:hr.bottom};for(let i=s.ao.length-1;i>=0;i--){if(i>=s.ao.length)break;const o=s.ao[i];if(!o)continue;o.y+=o.sp*dt;o.el.style.top=o.y+"px";if(o.y>gr.height){o.el.remove();s.ao.splice(i,1);continue;}const or=o.el.getBoundingClientRect();if(or.right>hb.l&&or.left<hb.r&&or.bottom>hb.t&&or.top<hb.b){hc(o,i);if(s.ao.length===0)break;}}}
-function spl(){if(!s.rn||s.pa)return;if(s.qi>=C.qs.length)return;const q=C.qs[s.qi];if(!q)return;const r=Math.random();let t,tx,ic;if(r<0.1){t='b';}else if(r<0.5){t='a';ic=1;tx=q.correct[Math.floor(Math.random()*q.correct.length)];}else{t='a';ic=0;tx=q.wrong[Math.floor(Math.random()*q.wrong.length)];}cfo(t,tx,ic);}
+function spl(){if(!s.rn||s.pa)return;if(s.qi>=C.qs.length)return;const q=C.qs[s.qi];if(!q)return;const r=Math.random();let t,tx,ic;
+    if(r<0.1){t='b';}
+    else if(r<0.5){t='a';ic=1;tx=q.correct[Math.floor(Math.random()*q.correct.length)];}
+    else{t='a';ic=0;tx=q.wrong[Math.floor(Math.random()*q.wrong.length)];}
+    cfo(t,tx,ic);
+}
 function cfo(t,tx,ic){const el=D.createElement('div');el.classList.add('f');
-    // ОПРЕДЕЛЯЕМ ТИП И ДОБАВЛЯЕМ КЛАСС
     if(t==='b'){
-        el.classList.add('is-bomb'); // ЭТО БОМБА
+        el.classList.add('is-bomb');
         el.style.backgroundImage='url("'+C.bi+'")';
     }else{
-        el.classList.add('is-answer'); // ЭТО ОТВЕТ
-        el.style.backgroundImage='url("'+(ic?C.gc:C.gw)+'")';
+        el.classList.add('is-answer');
+        // RANDOM SKIN LOGIC HERE:
+        const bg = Math.random() < 0.5 ? C.i1 : C.i2;
+        el.style.backgroundImage='url("'+bg+'")';
         const l=D.createElement('div');l.className='il';l.textContent=tx;el.appendChild(l);
     }
     const gw=E.c.offsetWidth,x=Math.random()*(gw-110)+20;el.style.left=x+"px";E.c.appendChild(el);s.ao.push({el:el,x:x,y:-100,sp:Number(C.fs)+Math.random()*1.5,type:t,ic:ic});
 }
 function hc(o,i){o.el.remove();s.ao.splice(i,1);const hr=E.h.getBoundingClientRect(),cx=hr.left+hr.width/2;
-if(o.type==='b'){
-    ps('b'); td();ss();sft("-1 ❤️",cx,hr.top,"red");
-}else{
-    if(o.ic){
-        ps('c'); sft("Верно!",cx,hr.top,"#4caf50");nl();
-    }else{
-        ps('w'); td();sft("Ошибка!",cx,hr.top,"orange");
-    }
-}}
+if(o.type==='b'){ps('b');td();ss();sft("-1 ❤️",cx,hr.top,"red");}
+else{if(o.ic){ps('c');sft("Верно!",cx,hr.top,"#4caf50");nl();}else{ps('w');td();sft("Ошибка!",cx,hr.top,"orange");}}}
 function nl(){s.ao.forEach(o=>o.el.remove());s.ao=[];s.qi++;uu();if(s.qi>=C.qs.length){wg();}else{lq(s.qi);}}
 function td(){s.lv--;uu();if(s.lv<=0)go();}
 function uu(r=0){const c=E.l;if(r){c.innerHTML='';for(let i=0;i<s.lv;i++){const h=D.createElement('div');h.className='h';h.style.backgroundImage='url("'+C.li+'")';c.appendChild(h);}}else{const ch=c.querySelectorAll('.h:not(.br)'),ct=s.lv;if(ch.length>ct){for(let i=0;i<ch.length-ct;i++){const hb=ch[ch.length-1-i];if(hb){hb.classList.add('br');hb.addEventListener('animationend',()=>hb.remove(),{once:true});}}}}const p=C.qs.length>0?(s.qi/C.qs.length)*100:0;E.pf.style.width=p+'%';}
@@ -715,12 +600,7 @@ function go(){s.rn=0;if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);so(2
 function wg(){s.rn=0;if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);E.pf.style.width='100%';so(3);}
 function fc(){const c=['#d13447','#ffbf00','#263672','#7b2cbf','#8ac926','#1982c4'];for(let i=0;i<150;i++){const e=D.createElement('div');e.className='cf';e.style.backgroundColor=c[Math.floor(Math.random()*c.length)];e.style.left=Math.random()*100+'vw';const d=Math.random()*3+2;e.style.animation=\`cfa \${d}s linear forwards\`;e.style.animationDelay=Math.random()*2+'s';const s=Math.random()*10+5;e.style.width=s+'px';e.style.height=s*0.6+'px';E.c.appendChild(e);}}
 function rs(){s.hx=(E.c.offsetWidth-100)/2;E.h.style.left=s.hx+"px";}
-function ev(){
-    window.addEventListener('resize',rs);
-    window.addEventListener('keydown',e=>{if(e.code==='Space')tp();if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=1;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=1;});
-    window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=0;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=0;}); 
-    E.pb.addEventListener('click',tp);
-}
+function ev(){window.addEventListener('resize',rs);window.addEventListener('keydown',e=>{if(e.code==='Space')tp();if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=1;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=1;});window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')s.k.l=0;if(e.code==='ArrowRight'||e.code==='KeyD')s.k.r=0;});E.pb.addEventListener('click',tp);}
 I();})();
 <\/script></body></html>`;
     return html;

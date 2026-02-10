@@ -2,17 +2,699 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Builder v70 Ultimate Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Pacifico&family=Ruslan+Display&family=Montserrat:wght@600;800&family=Press+Start+2P&family=Lobster&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
+<style>
+/* --- ДИЗАЙН РЕДАКТОРА --- */
+:root { --primary: #6c5ce7; --bg-editor: #f4f7f6; --card-bg: #ffffff; --text-main: #2d3436; --text-muted: #636e72; --gradient: linear-gradient(135deg, #6c5ce7, #a29bfe); --panel-w: 430px; }
+* { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+body { font-family: 'Roboto', sans-serif; height: 100vh; display: flex; overflow: hidden; background: #dfe6e9; }
+.editor-panel { width: var(--panel-w); background: var(--bg-editor); border-right: 1px solid #dcdde1; display: flex; flex-direction: column; z-index: 10; box-shadow: 5px 0 15px rgba(0,0,0,0.05); }
+.editor-header { padding: 20px; background: var(--gradient); color: #fff; box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3); position: relative; }
+.editor-header h2 { font-family: 'Montserrat', sans-serif; font-size: 15px; margin: 0; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.header-actions { position: absolute; top: 8px; right: 15px; display: flex; gap: 5px; }
+.icon-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #fff; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; }
+.icon-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
+.tabs { display: flex; background: #fff; padding: 0 10px; border-bottom: 1px solid #e0e0e0; }
+.tab { flex: 1; text-align: center; padding: 15px 0; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: 600; border-bottom: 3px solid transparent; transition: 0.3s; text-transform: uppercase; }
+.tab:hover { color: var(--primary); background: #fdfdfd; }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.settings-content { flex: 1; overflow-y: auto; padding: 20px; }
+.section { display: none; animation: fadeIn 0.3s; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.info-box { background: #e3f2fd; border-left: 4px solid #2196f3; color: #0d47a1; padding: 12px; border-radius: 4px; font-size: 12px; margin-bottom: 20px; line-height: 1.4; }
+.warning-box { background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; padding: 12px; border-radius: 4px; font-size: 12px; margin-bottom: 20px; line-height: 1.4; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.file-upload-row { display: flex; gap: 5px; }
+.file-upload-row input[type="text"] { flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+input[type="file"] { display: none; }
+.btn-upload { background: #dfe6e9; border: 2px solid #e6e6e6; border-left: none; border-top-right-radius: 8px; border-bottom-right-radius: 8px; padding: 0 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: 0.2s; }
+.btn-upload:hover { background: #b2bec3; }
+.btn-play { background: #27ae60; border: 2px solid #27ae60; border-left: none; color: #fff; border-radius: 0; padding: 0 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.2s; }
+.btn-play:hover { background: #229954; }
+.file-upload-row .btn-play { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 12px; border: 2px solid #e6e6e6; border-radius: 8px; font-size: 14px; background: #fff; color: var(--text-main); transition: 0.2s; font-family: 'Roboto', sans-serif; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1); }
+.form-group input[type="color"] { height: 40px; padding: 2px; cursor: pointer; }
+.form-group input[type="range"] { cursor: pointer; }
+.form-group input[type="checkbox"] { width: auto; margin-right: 8px; }
+.form-row { display: flex; gap: 10px; }
+.btn-add { width: 100%; padding: 12px; background: #fff; border: 2px dashed var(--primary); color: var(--primary); border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 13px; transition: 0.2s; }
+.btn-add:hover { background: #f0f0ff; }
+.editor-footer { padding: 20px; border-top: 1px solid #e0e0e0; background: #fff; }
+.btn-generate { width: 100%; padding: 14px; background: var(--gradient); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4); transition: 0.2s; }
+.btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(108, 92, 231, 0.5); }
+.btn-generate:active { transform: translateY(1px); }
+.preview-area { flex: 1; background: #dfe6e9; padding: 20px; display: flex; align-items: center; justify-content: center; background-image: radial-gradient(#b2bec3 1px, transparent 1px); background-size: 20px 20px; }
+#game-preview-container { width: 960px; height: 540px; background: #fff; box-shadow: 0 20px 60px rgba(0,0,0,0.15); border-radius: 12px; overflow: hidden; }
+#game-frame { width: 100%; height: 100%; border: none; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(45, 52, 54, 0.9); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+.code-modal { background: #fff; padding: 30px; border-radius: 16px; width: 600px; max-width: 90%; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.code-modal h3 { font-family: 'Montserrat', sans-serif; color: var(--text-main); }
+.code-modal textarea { width: 100%; height: 300px; font-family: 'Consolas', monospace; padding: 15px; font-size: 12px; background: #f1f2f6; border: none; border-radius: 8px; color: #2f3542; }
+.modal-btns { display: flex; justify-content: flex-end; gap: 10px; }
+.modal-btns button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn-close { background: #dfe4ea; color: #2f3542; }
+.btn-copy { background: var(--primary); color: #fff; }
+.btn-reset { background: #e74c3c; color: #fff; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b2bec3; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #636e72; }
+
+.style-section { background: #fff; border: 2px solid #e6e6e6; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+.style-section-title { font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
+.checkbox-group { display: flex; align-items: center; padding: 8px 0; }
+.checkbox-group label { text-transform: none; margin: 0; font-size: 13px; }
+
+.sound-item { background: #f8f9fa; border: 1px solid #e0e0e0; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+.sound-item-title { font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; }
+
+.range-value { display: inline-block; min-width: 40px; text-align: center; font-weight: 700; color: var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="editor-panel">
+    <div class="editor-header">
+        <h2><img src="https://img.genially.com/684ea2da1b51060014c50e97/7deba801-847c-4b43-b21f-889cb46a08d3.png" style="width: 48px; height: 48px; border-radius: 8px;"> Редактор "Поймай предмет" v70</h2>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="resetAll()" title="Сбросить всё">🔄</button>
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('content')">Вопросы</div>
+        <div class="tab" onclick="switchTab('graphics')">Графика</div>
+        <div class="tab" onclick="switchTab('style')">Стиль</div>
+        <div class="tab" onclick="switchTab('text')">Тексты</div>
+        <div class="tab" onclick="switchTab('sounds')">Звуки</div>
+        <div class="tab" onclick="switchTab('game')">Игра</div>
+    </div>
+    
+    <div class="settings-content">
+        <div id="tab-content" class="section active">
+            <div class="info-box">💡 <b>Массовый импорт:</b> Вставьте вопросы построчно. Ответы разделяйте символом <b>|</b></div>
+            
+            <div class="form-group">
+                <label>📝 Вопросы (каждый с новой строки)</label>
+                <textarea id="bulk-questions" rows="4" placeholder="Пример:&#10;Столица России?&#10;2+2=?&#10;Цвет неба?" oninput="debouncedUpdate()"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label style="color:#2ecc71;">✅ Правильные ответы (через |)</label>
+                <textarea id="bulk-correct" rows="4" placeholder="Пример:&#10;Москва | москва&#10;4 | четыре&#10;Синий | Голубой" oninput="debouncedUpdate()"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label style="color:#e74c3c;">❌ Неправильные ответы (через |)</label>
+                <textarea id="bulk-wrong" rows="4" placeholder="Пример:&#10;Питер | Казань&#10;5 | 3&#10;Зелёный | Красный" oninput="debouncedUpdate()"></textarea>
+            </div>
+        </div>
+        
+        <div id="tab-graphics" class="section">
+            <div class="form-group"><label>Герой</label><div class="file-upload-row"><input type="text" id="img-hero" placeholder="Ссылка или файл" oninput="clearCache('hero'); debouncedUpdate()"><label for="file-hero" class="btn-upload">📂</label><input type="file" id="file-hero" accept="image/*" onchange="encodeImg(this, 'hero')"></div></div>
+            <div class="form-group"><label>Бомба (Враг)</label><div class="file-upload-row"><input type="text" id="img-bomb" placeholder="Ссылка или файл" oninput="clearCache('bomb'); debouncedUpdate()"><label for="file-bomb" class="btn-upload">📂</label><input type="file" id="file-bomb" accept="image/*" onchange="encodeImg(this, 'bomb')"></div></div>
+            
+            <div class="form-group" style="background:#e3f2fd; padding:10px; border-radius:8px; border:1px solid #90caf9;">
+                <label style="color:#1565c0;">❤️ Жизни (UI и Бонус)</label>
+                <div class="file-upload-row">
+                    <input type="text" id="img-life" placeholder="Ссылка или файл" oninput="clearCache('life'); debouncedUpdate()">
+                    <label for="file-life" class="btn-upload">📂</label>
+                    <input type="file" id="file-life" accept="image/*" onchange="encodeImg(this, 'life')">
+                </div>
+            </div>
+            
+            <div class="form-group"><label>Бонус: Прогресс (+5 ⭐)</label><div class="file-upload-row"><input type="text" id="img-bonus-score" oninput="clearCache('bscore'); debouncedUpdate()"><label for="file-bonus-score" class="btn-upload">📂</label><input type="file" id="file-bonus-score" accept="image/*" onchange="encodeImg(this, 'bscore')"></div></div>
+
+            <div class="info-box" style="margin-top:20px; background:#fff3cd; border-color:#ffc107; color:#856404;">⚠️ <b>Важно:</b> Картинки ниже выбираются <b>случайно</b> для любого ответа.</div>
+            <div class="form-row">
+                <div class="form-group" style="flex:1"><label>Скин предмета 1</label><div class="file-upload-row"><input type="text" id="img-skin1" oninput="clearCache('skin1'); debouncedUpdate()"><label for="file-skin1" class="btn-upload">📂</label><input type="file" id="file-skin1" accept="image/*" onchange="encodeImg(this, 'skin1')"></div></div>
+                <div class="form-group" style="flex:1"><label>Скин предмета 2</label><div class="file-upload-row"><input type="text" id="img-skin2" oninput="clearCache('skin2'); debouncedUpdate()"><label for="file-skin2" class="btn-upload">📂</label><input type="file" id="file-skin2" accept="image/*" onchange="encodeImg(this, 'skin2')"></div></div>
+            </div>
+        </div>
+        
+        <div id="tab-style" class="section">
+            <!-- ШРИФТЫ -->
+            <div class="style-section">
+                <div class="style-section-title">🔤 Шрифты</div>
+                <div class="form-group"><label>Шрифт игры</label><select id="font-family" onchange="u()"><option value="Ruslan Display">Ruslan Display (Стильный)</option><option value="Press Start 2P">Press Start 2P (Пиксельный)</option><option value="Lobster">Lobster (Рукописный)</option><option value="Comfortaa">Comfortaa (Округлый)</option><option value="Roboto">Roboto (Стандарт)</option><option value="Pacifico">Pacifico (Курсив)</option><option value="Arial">Arial</option></select></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Размер Вопроса</label><input type="number" id="fs-q" value="28" onchange="u()"></div>
+                    <div class="form-group"><label>Размер Ответа</label><input type="number" id="fs-a" value="20" onchange="u()"></div>
+                </div>
+            </div>
+
+            <!-- РАЗМЕРЫ -->
+            <div class="style-section">
+                <div class="style-section-title">📐 Размеры</div>
+                <div class="form-group"><label>Размер ГЕРОЯ: <span id="sd-hsize" class="range-value">150</span>px</label><input type="range" id="conf-hero-size" min="50" max="250" step="5" value="150" oninput="document.getElementById('sd-hsize').innerText=this.value;u()"></div>
+                <div class="form-group"><label>Размер ОТВЕТОВ: <span id="sd-size" class="range-value">70</span>px</label><input type="range" id="conf-size" min="40" max="150" step="5" value="70" oninput="document.getElementById('sd-size').innerText=this.value;u()"></div>
+                <div class="form-group"><label>Размер БОМБЫ / БОНУСОВ: <span id="sd-bsize" class="range-value">60</span>px</label><input type="range" id="conf-bomb-size" min="40" max="150" step="5" value="60" oninput="document.getElementById('sd-bsize').innerText=this.value;u()"></div>
+                <div class="form-group"><label>↕️ Смещение текста: <span id="sd-pos" class="range-value">0</span>px</label><input type="range" id="conf-tpos" min="-50" max="50" step="2" value="0" oninput="document.getElementById('sd-pos').innerText=this.value;u()"></div>
+            </div>
+
+            <!-- ОКНА (МОДАЛКИ) -->
+            <div class="style-section">
+                <div class="style-section-title">🪟 Модальные окна</div>
+                <div class="form-group"><label>🎨 Цвет фона окна</label><input type="color" id="col-win-bg" value="#1a1a1a" onchange="u()"></div>
+                <div class="form-group"><label>📝 Цвет текста окна</label><input type="color" id="col-win-text" value="#ffffff" onchange="u()"></div>
+                <div class="form-group"><label>✨ Цвет рамки / кнопки</label><input type="color" id="col-border" value="#a29bfe" onchange="u()"></div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="win-glow" checked onchange="u()">
+                    <label for="win-glow">Включить неоновое свечение</label>
+                </div>
+            </div>
+
+            <!-- ПРОГРЕСС БАР -->
+            <div class="style-section">
+                <div class="style-section-title">📊 Прогресс бар</div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1"><label>Начало градиента</label><input type="color" id="col-p1" value="#9b59b6" onchange="u()"></div>
+                    <div class="form-group" style="flex:1"><label>Конец градиента</label><input type="color" id="col-p2" value="#8e44ad" onchange="u()"></div>
+                </div>
+            </div>
+
+            <!-- ВОПРОСНАЯ ПАНЕЛЬ -->
+            <div class="style-section">
+                <div class="style-section-title">❓ Панель вопроса</div>
+                <div class="form-group"><label>🎨 Цвет фона панели</label><input type="color" id="col-qbox-bg" value="#111111" onchange="u()"></div>
+                <div class="form-group"><label>🔤 Цвет текста вопроса</label><input type="color" id="col-question-text" value="#ffffff" onchange="u()"></div>
+            </div>
+
+            <!-- ПРЕДМЕТЫ -->
+            <div class="style-section">
+                <div class="style-section-title">🎯 Предметы (ответы)</div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1"><label>Цвет текста</label><input type="color" id="col-lt" value="#ffffff" onchange="u()"></div>
+                    <div class="form-group" style="flex:1"><label>Цвет подложки</label><input type="color" id="col-lb" value="#000000" onchange="u()"></div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="item-transparent" onchange="u()">
+                    <label for="item-transparent">Прозрачная подложка</label>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tab-text" class="section">
+            <div class="form-group">
+                <label>🌍 Язык интерфейса (пресет)</label>
+                <select id="lang-preset" onchange="applyLangPreset()">
+                    <option value="custom">Пользовательский</option>
+                    <option value="ru" selected>🇷🇺 Русский</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="zh">🇨🇳 中文</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Заголовок меню</label><input type="text" id="tt" value="ПОЙМАЙ ПРЕДМЕТЫ" onchange="u()"></div>
+            <div class="form-group"><label>Описание меню</label><textarea id="td" rows="2" onchange="u()">Используй ← или → чтобы поймать правильные ответы. Избегай бомб и неправильных ответов!</textarea></div>
+            <div class="form-group"><label>Текст Победы</label><input type="text" id="tw" value="ПОБЕДА!" onchange="u()"></div>
+            <div class="form-group"><label>Текст Поражения</label><input type="text" id="tl" value="Ой!" onchange="u()"></div>
+            
+            <div class="style-section">
+                <div class="style-section-title">🎯 Текст кнопок</div>
+                <div class="form-group"><label>Кнопка "Старт"</label><input type="text" id="btn-start" value="ИГРАТЬ" onchange="u()"></div>
+                <div class="form-group"><label>Кнопка "Продолжить"</label><input type="text" id="btn-continue" value="ПРОДОЛЖИТЬ" onchange="u()"></div>
+                <div class="form-group"><label>Кнопка "Повтор"</label><input type="text" id="btn-retry" value="ЕЩЁ РАЗ" onchange="u()"></div>
+            </div>
+        </div>
+
+        <div id="tab-sounds" class="section">
+            <div class="info-box">🔊 <b>Загрузите свои звуки</b> или используйте ссылки. Оставьте пустым для звуков по умолчанию.</div>
+            
+            <div class="sound-item">
+                <div class="sound-item-title">💣 Звук бомбы</div>
+                <div class="file-upload-row">
+                    <input type="text" id="snd-bomb" placeholder="Ссылка на MP3/WAV" oninput="clearCache('sndbomb'); debouncedUpdate()">
+                    <label for="file-snd-bomb" class="btn-upload">📂</label>
+                    <input type="file" id="file-snd-bomb" accept="audio/*" onchange="encodeAudio(this, 'sndbomb')">
+                    <button class="btn-play" onclick="previewSound('bomb')">▶</button>
+                </div>
+            </div>
+
+            <div class="sound-item">
+                <div class="sound-item-title">✅ Звук правильного ответа</div>
+                <div class="file-upload-row">
+                    <input type="text" id="snd-correct" placeholder="Ссылка на MP3/WAV" oninput="clearCache('sndcorrect'); debouncedUpdate()">
+                    <label for="file-snd-correct" class="btn-upload">📂</label>
+                    <input type="file" id="file-snd-correct" accept="audio/*" onchange="encodeAudio(this, 'sndcorrect')">
+                    <button class="btn-play" onclick="previewSound('correct')">▶</button>
+                </div>
+            </div>
+
+            <div class="sound-item">
+                <div class="sound-item-title">❌ Звук неправильного ответа</div>
+                <div class="file-upload-row">
+                    <input type="text" id="snd-wrong" placeholder="Ссылка на MP3/WAV" oninput="clearCache('sndwrong'); debouncedUpdate()">
+                    <label for="file-snd-wrong" class="btn-upload">📂</label>
+                    <input type="file" id="file-snd-wrong" accept="audio/*" onchange="encodeAudio(this, 'sndwrong')">
+                    <button class="btn-play" onclick="previewSound('wrong')">▶</button>
+                </div>
+            </div>
+
+            <div class="sound-item">
+                <div class="sound-item-title">❤️ Звук бонуса жизни</div>
+                <div class="file-upload-row">
+                    <input type="text" id="snd-life" placeholder="Ссылка на MP3/WAV" oninput="clearCache('sndlife'); debouncedUpdate()">
+                    <label for="file-snd-life" class="btn-upload">📂</label>
+                    <input type="file" id="file-snd-life" accept="audio/*" onchange="encodeAudio(this, 'sndlife')">
+                    <button class="btn-play" onclick="previewSound('life')">▶</button>
+                </div>
+            </div>
+
+            <div class="sound-item">
+                <div class="sound-item-title">⭐ Звук бонуса прогресса</div>
+                <div class="file-upload-row">
+                    <input type="text" id="snd-bonus" placeholder="Ссылка на MP3/WAV" oninput="clearCache('sndbonus'); debouncedUpdate()">
+                    <label for="file-snd-bonus" class="btn-upload">📂</label>
+                    <input type="file" id="file-snd-bonus" accept="audio/*" onchange="encodeAudio(this, 'sndbonus')">
+                    <button class="btn-play" onclick="previewSound('bonus')">▶</button>
+                </div>
+            </div>
+
+            <div class="sound-item">
+                <div class="sound-item-title">🏆 Звук победы</div>
+                <div class="file-upload-row">
+                    <input type="text" id="snd-win" placeholder="Ссылка на MP3/WAV" oninput="clearCache('sndwin'); debouncedUpdate()">
+                    <label for="file-snd-win" class="btn-upload">📂</label>
+                    <input type="file" id="file-snd-win" accept="audio/*" onchange="encodeAudio(this, 'sndwin')">
+                    <button class="btn-play" onclick="previewSound('win')">▶</button>
+                </div>
+            </div>
+
+            <div class="sound-item">
+                <div class="sound-item-title">😢 Звук поражения</div>
+                <div class="file-upload-row">
+                    <input type="text" id="snd-lose" placeholder="Ссылка на MP3/WAV" oninput="clearCache('sndlose'); debouncedUpdate()">
+                    <label for="file-snd-lose" class="btn-upload">📂</label>
+                    <input type="file" id="file-snd-lose" accept="audio/*" onchange="encodeAudio(this, 'sndlose')">
+                    <button class="btn-play" onclick="previewSound('lose')">▶</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-game" class="section">
+            <div class="info-box">🎮 <b>Настройки игровой механики</b></div>
+            
+            <div class="style-section">
+                <div class="style-section-title">⚡ Геймплей</div>
+                <div class="form-group"><label>Скорость падения: <span id="sd-speed" class="range-value">2</span></label><input type="range" id="conf-speed" min="1" max="10" step="0.5" value="2" oninput="document.getElementById('sd-speed').innerText=this.value;u()"></div>
+                <div class="form-group"><label>Частота предметов (мс): <span id="sd-freq" class="range-value">900</span></label><input type="range" id="conf-freq" min="300" max="2000" step="100" value="900" oninput="document.getElementById('sd-freq').innerText=this.value;u()"></div>
+                <div class="form-group"><label>❤️ Количество жизней: <span id="sd-lives" class="range-value">3</span></label><input type="range" id="conf-lives" min="1" max="10" step="1" value="3" oninput="document.getElementById('sd-lives').innerText=this.value;u()"></div>
+            </div>
+
+            <div class="style-section">
+                <div class="style-section-title">🎲 Вероятности появления</div>
+                <div class="form-group"><label>💣 Бомбы: <span id="sd-prob-bomb" class="range-value">15</span>%</label><input type="range" id="prob-bomb" min="0" max="50" step="1" value="15" oninput="document.getElementById('sd-prob-bomb').innerText=this.value;u()"></div>
+                <div class="form-group"><label>❤️ Бонус жизни: <span id="sd-prob-life" class="range-value">5</span>%</label><input type="range" id="prob-life" min="0" max="30" step="1" value="5" oninput="document.getElementById('sd-prob-life').innerText=this.value;u()"></div>
+                <div class="form-group"><label>⭐ Бонус прогресса: <span id="sd-prob-score" class="range-value">5</span>%</label><input type="range" id="prob-score" min="0" max="30" step="1" value="5" oninput="document.getElementById('sd-prob-score').innerText=this.value;u()"></div>
+            </div>
+
+            <div class="style-section">
+                <div class="style-section-title">📱 Мобильные устройства</div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="mobile-controls" checked onchange="u()">
+                    <label for="mobile-controls">Показывать кнопки управления (← →)</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="editor-footer"><button class="btn-generate" onclick="gen()">🚀 ПОЛУЧИТЬ КОД</button></div>
+</div>
+<div class="preview-area"><div id="game-preview-container"><iframe id="game-frame"></iframe></div></div>
+<div id="modal-code" class="modal-overlay"><div class="code-modal"><h3>🎉 Код готов!</h3><p>Скопируйте код и вставьте его в Genially (Insert -> Others).</p><textarea id="final-code" readonly></textarea><div class="modal-btns"><button class="btn-close" onclick="document.getElementById('modal-code').style.display='none'">Закрыть</button><button class="btn-copy" onclick="copy()">Копировать</button></div></div></div>
+
+<input type="file" id="config-file-import" accept=".json" style="display:none" onchange="handleConfigImport(this)">
+
+<script>
+const def={
+    h:"https://img.genially.com/684ea2da1b51060014c50e97/4e2c4c8a-5a17-4c32-95e1-7cc360b44a84.png",
+    b:"https://img.genially.com/684ea2da1b51060014c50e97/91910846-d855-4c4b-8561-5ff0edaa87ad.png",
+    l:"https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif",
+    sk1:"https://img.genially.com/684ea2da1b51060014c50e97/33b8d640-53fd-4b63-b5df-f7df01a72b2f.png",
+    sk2:"https://img.genially.com/684ea2da1b51060014c50e97/5857090c-baea-4b09-bb56-cda2472b1b19.png",
+    bscore:"https://img.genially.com/684ea2da1b51060014c50e97/516bf8aa-cb50-433c-98ed-500cc8bb4696.png"
+};
+
+const langPresets = {
+    ru: { title: "ПОЙМАЙ ПРЕДМЕТЫ", desc: "Используй ← или → чтобы поймать правильные ответы. Избегай бомб и неправильных ответов!", win: "ПОБЕДА!", lose: "Ой!", btnStart: "ИГРАТЬ", btnContinue: "ПРОДОЛЖИТЬ", btnRetry: "ЕЩЁ РАЗ" },
+    en: { title: "CATCH THE ITEMS", desc: "Use ← or → to catch the correct answers. Avoid bombs and wrong answers!", win: "VICTORY!", lose: "Oops!", btnStart: "PLAY", btnContinue: "CONTINUE", btnRetry: "TRY AGAIN" },
+    de: { title: "FANGE DIE GEGENSTÄNDE", desc: "Benutze ← oder →, um die richtigen Antworten zu fangen. Vermeide Bomben und falsche Antworten!", win: "SIEG!", lose: "Hoppla!", btnStart: "SPIELEN", btnContinue: "WEITER", btnRetry: "NOCHMAL" },
+    fr: { title: "ATTRAPE LES OBJETS", desc: "Utilise ← ou → pour attraper les bonnes réponses. Évite les bombes et les mauvaises réponses!", win: "VICTOIRE!", lose: "Oups!", btnStart: "JOUER", btnContinue: "CONTINUER", btnRetry: "RÉESSAYER" },
+    zh: { title: "接住物品", desc: "使用 ← 或 → 接住正确答案。避开炸弹和错误答案！", win: "胜利！", lose: "哎呀！", btnStart: "开始", btnContinue: "继续", btnRetry: "再试一次" },
+    ko: { title: "아이템 잡기", desc: "← 또는 →를 사용하여 정답을 잡으세요. 폭탄과 오답을 피하세요!", win: "승리!", lose: "앗!", btnStart: "시작", btnContinue: "계속", btnRetry: "다시 시도" }
+};
+
+const fontImports = {
+    "Roboto": "@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap');",
+    "Pacifico": "@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');",
+    "Ruslan Display": "@import url('https://fonts.googleapis.com/css2?family=Ruslan+Display&display=swap');",
+    "Press Start 2P": "@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');",
+    "Lobster": "@import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');",
+    "Comfortaa": "@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap');",
+    "Arial": ""
+};
+
+let imgCache = { hero: null, bomb: null, life: null, skin1: null, skin2: null, bscore: null };
+let audioCache = { sndbomb: null, sndcorrect: null, sndwrong: null, sndlife: null, sndbonus: null, sndwin: null, sndlose: null };
+let updateTimeout = null;
+let previewAudio = {};
+
+// DEBOUNCE для оптимизации
+function debouncedUpdate() {
+    clearTimeout(updateTimeout);
+    updateTimeout = setTimeout(() => {
+        u();
+        saveToLocalStorage();
+    }, 300);
+}
+
+// LOCALSTORAGE
+function saveToLocalStorage() {
+    try {
+        const config = getCfg();
+        localStorage.setItem('gameBuilderConfig', JSON.stringify(config));
+    } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        const saved = localStorage.getItem('gameBuilderConfig');
+        if (saved) {
+            const config = JSON.parse(saved);
+            applyConfig(config);
+        }
+    } catch (e) {
+        console.warn('Could not load from localStorage:', e);
+    }
+}
+
+function applyConfig(c) {
+    // Применяем сохраненную конфигурацию
+    if (c.qs && c.qs.length > 0) {
+        document.getElementById('bulk-questions').value = c.qs.map(q => q.text).join('\n');
+        document.getElementById('bulk-correct').value = c.qs.map(q => q.correct.join(' | ')).join('\n');
+        document.getElementById('bulk-wrong').value = c.qs.map(q => q.wrong.join(' | ')).join('\n');
+    }
+    if (c.h) document.getElementById('img-hero').value = c.h;
+    if (c.b) document.getElementById('img-bomb').value = c.b;
+    if (c.l) document.getElementById('img-life').value = c.l;
+    if (c.i1) document.getElementById('img-skin1').value = c.i1;
+    if (c.i2) document.getElementById('img-skin2').value = c.i2;
+    if (c.bsc) document.getElementById('img-bonus-score').value = c.bsc;
+    if (c.sp) document.getElementById('conf-speed').value = c.sp;
+    if (c.fr) document.getElementById('conf-freq').value = c.fr;
+    if (c.lives) document.getElementById('conf-lives').value = c.lives;
+    if (c.fn) document.getElementById('font-family').value = c.fn;
+    if (c.fq) document.getElementById('fs-q').value = c.fq;
+    if (c.fa) document.getElementById('fs-a').value = c.fa;
+    if (c.btnStart) document.getElementById('btn-start').value = c.btnStart;
+    if (c.btnContinue) document.getElementById('btn-continue').value = c.btnContinue;
+    if (c.btnRetry) document.getElementById('btn-retry').value = c.btnRetry;
+    // ... и так далее для всех полей
+    u();
+}
+
+// ЭКСПОРТ/ИМПОРТ
+function exportConfig() {
+    const config = getCfg();
+    const json = JSON.stringify(config, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'game-config.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importConfig() {
+    document.getElementById('config-file-import').click();
+}
+
+function handleConfigImport(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const config = JSON.parse(e.target.result);
+                applyConfig(config);
+                alert('✅ Настройки успешно загружены!');
+            } catch (err) {
+                alert('❌ Ошибка при загрузке файла: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+}
+
+// СБРОС
+function resetAll() {
+    if (confirm('⚠️ Вы уверены? Все настройки будут сброшены!')) {
+        localStorage.removeItem('gameBuilderConfig');
+        location.reload();
+    }
+}
+
+// ПРЕДПРОСМОТР ЗВУКА
+function previewSound(type) {
+    const input = document.getElementById('snd-' + type);
+    const url = audioCache['snd' + type] || input.value;
+    
+    if (!url) {
+        alert('⚠️ Сначала загрузите звук!');
+        return;
+    }
+    
+    if (previewAudio[type]) {
+        previewAudio[type].pause();
+        previewAudio[type].currentTime = 0;
+    }
+    
+    previewAudio[type] = new Audio(url);
+    previewAudio[type].play().catch(e => alert('❌ Не удалось воспроизвести звук'));
+}
+
+window.onload=()=>{
+    document.getElementById('img-hero').value=def.h;
+    document.getElementById('img-bomb').value=def.b;
+    document.getElementById('img-life').value=def.l;
+    document.getElementById('img-skin1').value=def.sk1;
+    document.getElementById('img-skin2').value=def.sk2;
+    document.getElementById('img-bonus-score').value=def.bscore;
+    
+    document.getElementById('bulk-questions').value = "Столица России?\n2+2=?\nЦвет неба?";
+    document.getElementById('bulk-correct').value = "Москва | москва\n4 | четыре\nСиний | Голубой";
+    document.getElementById('bulk-wrong').value = "Питер | Казань\n5 | 3\nЗелёный | Красный";
+    
+    // Устанавливаем значения кнопок по умолчанию
+    if (!document.getElementById('btn-start').value) document.getElementById('btn-start').value = "ИГРАТЬ";
+    if (!document.getElementById('btn-continue').value) document.getElementById('btn-continue').value = "ПРОДОЛЖИТЬ";
+    if (!document.getElementById('btn-retry').value) document.getElementById('btn-retry').value = "ЕЩЁ РАЗ";
+    
+    loadFromLocalStorage();
+    u();
+};
+
+function switchTab(id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-'+id).classList.add('active');
+}
+
+function applyLangPreset() {
+    const lang = document.getElementById('lang-preset').value;
+    if (lang === 'custom') return;
+    const preset = langPresets[lang];
+    document.getElementById('tt').value = preset.title;
+    document.getElementById('td').value = preset.desc;
+    document.getElementById('tw').value = preset.win;
+    document.getElementById('tl').value = preset.lose;
+    document.getElementById('btn-start').value = preset.btnStart;
+    document.getElementById('btn-continue').value = preset.btnContinue;
+    document.getElementById('btn-retry').value = preset.btnRetry;
+    u();
+}
+
+function encodeImg(input, key) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imgCache[key] = e.target.result; 
+            document.getElementById('img-' + key).value = "(Картинка загружена)";
+            u();
+            saveToLocalStorage();
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function encodeAudio(input, key) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            audioCache[key] = e.target.result;
+            document.getElementById('snd-' + key.replace('snd', '')).value = "(Звук загружен)";
+            u();
+            saveToLocalStorage();
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearCache(key) { 
+    if (key.startsWith('snd')) {
+        audioCache[key] = null;
+    } else {
+        imgCache[key] = null;
+    }
+}
+
+function getCfg(){
+    const questions = document.getElementById('bulk-questions').value.split('\n').filter(q => q.trim());
+    const correct = document.getElementById('bulk-correct').value.split('\n').filter(c => c.trim());
+    const wrong = document.getElementById('bulk-wrong').value.split('\n').filter(w => w.trim());
+    
+    const qs = [];
+    for (let i = 0; i < questions.length; i++) {
+        const c = (correct[i] || '').split('|').map(s => s.trim()).filter(s => s);
+        const w = (wrong[i] || '').split('|').map(s => s.trim()).filter(s => s);
+        
+        // ВАЛИДАЦИЯ: проверяем что есть хотя бы один правильный ответ
+        if (questions[i].trim() && c.length > 0) {
+            qs.push({
+                text: questions[i].trim(),
+                correct: c,
+                wrong: w.length > 0 ? w : ['???'] // Если нет неправильных - добавляем заглушку
+            });
+        }
+    }
+    
+    const lifeImg = imgCache.life || document.getElementById('img-life').value;
+    
+    return {
+        sp: document.getElementById('conf-speed').value,
+        fr: document.getElementById('conf-freq').value,
+        lives: document.getElementById('conf-lives').value,
+        h: imgCache.hero || document.getElementById('img-hero').value,
+        b: imgCache.bomb || document.getElementById('img-bomb').value, 
+        l: lifeImg,
+        i1: imgCache.skin1 || document.getElementById('img-skin1').value,
+        i2: imgCache.skin2 || document.getElementById('img-skin2').value,
+        bli: lifeImg,
+        bsc: imgCache.bscore || document.getElementById('img-bonus-score').value,
+        isz: document.getElementById('conf-size').value,
+        hsz: document.getElementById('conf-hero-size').value,
+        bsz: document.getElementById('conf-bomb-size').value,
+        tpos: document.getElementById('conf-tpos').value,
+        qs: qs,
+        fn: document.getElementById('font-family').value,
+        fq: document.getElementById('fs-q').value,
+        fa: document.getElementById('fs-a').value,
+        bc: document.getElementById('col-border').value,
+        wbg: document.getElementById('col-win-bg').value,
+        wtxt: document.getElementById('col-win-text').value,
+        wglow: document.getElementById('win-glow').checked,
+        p1: document.getElementById('col-p1').value,
+        p2: document.getElementById('col-p2').value,
+        qtxt: document.getElementById('col-question-text').value,
+        qboxbg: document.getElementById('col-qbox-bg').value,
+        cl: document.getElementById('col-lt').value,
+        lb: document.getElementById('col-lb').value,
+        itrans: document.getElementById('item-transparent').checked,
+        tt: document.getElementById('tt').value,
+        td: document.getElementById('td').value,
+        tw: document.getElementById('tw').value,
+        tl: document.getElementById('tl').value,
+        btnStart: document.getElementById('btn-start').value,
+        btnContinue: document.getElementById('btn-continue').value,
+        btnRetry: document.getElementById('btn-retry').value,
+        probBomb: document.getElementById('prob-bomb').value,
+        probLife: document.getElementById('prob-life').value,
+        probScore: document.getElementById('prob-score').value,
+        mobileControls: document.getElementById('mobile-controls').checked,
+        sndbomb: audioCache.sndbomb || document.getElementById('snd-bomb').value || '',
+        sndcorrect: audioCache.sndcorrect || document.getElementById('snd-correct').value || '',
+        sndwrong: audioCache.sndwrong || document.getElementById('snd-wrong').value || '',
+        sndlife: audioCache.sndlife || document.getElementById('snd-life').value || '',
+        sndbonus: audioCache.sndbonus || document.getElementById('snd-bonus').value || '',
+        sndwin: audioCache.sndwin || document.getElementById('snd-win').value || '',
+        sndlose: audioCache.sndlose || document.getElementById('snd-lose').value || ''
+    };
+}
+
+function u(){
+    const c=getCfg();
+    
+    // ВАЛИДАЦИЯ
+    if (c.qs.length === 0) {
+        console.warn('No valid questions');
+        return;
+    }
+    
+    const h=build(c);
+    document.getElementById('game-frame').src=URL.createObjectURL(new Blob([h],{type:'text/html'}));
+}
+
+function gen(){
+    const c=getCfg();
+    if (c.qs.length === 0) {
+        alert('⚠️ Добавьте хотя бы один вопрос с правильными ответами!');
+        return;
+    }
+    document.getElementById('final-code').value=build(c);
+    document.getElementById('modal-code').style.display='flex';
+}
+
+function copy(){
+    const t=document.getElementById("final-code");
+    t.select();
+    document.execCommand("copy");
+    alert("✅ Скопировано!");
+}
+
+function build(c){
+    const fontImport = fontImports[c.fn] || "";
+    const qs = JSON.stringify(c.qs);
+    const glowStyle = c.wglow ? `box-shadow: 0 0 30px var(--c), inset 0 0 30px rgba(0,0,0,0.6);` : `box-shadow: none;`;
+    const itemBgStyle = c.itrans ? `background: transparent;` : `background: var(--lb);`;
+    const mobileControlsHTML = c.mobileControls ? `<div id="MC"><button class="mc-btn" id="MCL">←</button><button class="mc-btn" id="MCR">→</button></div>` : '';
+    const mobileControlsCSS = c.mobileControls ? `#MC{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:none;gap:20px;z-index:15}@media (max-width:768px),(pointer:coarse){#MC{display:flex}}.mc-btn{width:70px;height:70px;border-radius:50%;background:rgba(108,92,231,0.8);border:3px solid #fff;color:#fff;font-size:32px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);transition:0.1s}.mc-btn:active{transform:scale(0.9);background:rgba(108,92,231,1)}` : '';
+    
+    // Вычисляем вероятности
+    const pBomb = parseFloat(c.probBomb) / 100;
+    const pLife = parseFloat(c.probLife) / 100;
+    const pScore = parseFloat(c.probScore) / 100;
+    const pCorrect = 0.4; // 40% на правильные
+    const pWrong = 1 - (pBomb + pLife + pScore + pCorrect); // Остаток на неправильные
+    
+    let html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Ruslan+Display&display=swap');
+${fontImport}
 *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;background:transparent;
-    font-family:'Ruslan Display',sans-serif !important; margin:0;padding:0;overflow:hidden}
+    font-family:'${c.fn}',sans-serif !important; margin:0;padding:0;overflow:hidden}
 #GC{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;touch-action:none}
 :root{
-    --c:#a29bfe;--bg:#1a1a1a;--wtxt:#ffffff;--p1:#9b59b6;--p2:#8e44ad;
-    --fq:28px;--fa:20px;--cl:#ffffff;--lb:#000000;--qtxt:#ffffff;--qboxbg:#111111;
-    --isz:70px; --bsz:60px; --hsz:150px; --tpos:0px; 
+    --c:${c.bc};--bg:${c.wbg};--wtxt:${c.wtxt};--p1:${c.p1};--p2:${c.p2};
+    --fq:${c.fq}px;--fa:${c.fa}px;--cl:${c.cl};--lb:${c.lb};--qtxt:${c.qtxt};--qboxbg:${c.qboxbg};
+    --isz:${c.isz}px; --bsz:${c.bsz}px; --hsz:${c.hsz}px; --tpos:${c.tpos}px; 
 }
 #UI{position:absolute;top:0;left:0;width:100%;padding:50px 30px;z-index:10;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 .tb{display:flex;align-items:center;justify-content:center;gap:15px;pointer-events:auto}
@@ -21,7 +703,7 @@ html,body{width:100%;height:100%;background:transparent;
 .pc{flex:1;max-width:600px;height:20px;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.8);border-radius:10px;overflow:hidden}
 .pf{height:100%;background:linear-gradient(90deg,var(--p1),var(--p2));width:0%;transition:width 0.5s ease}
 #QB{background:var(--qboxbg);border:2px solid var(--c);box-shadow:0 0 10px var(--c);color:var(--qtxt);border-radius:18px;padding:18px 24px;text-align:center;max-width:820px;margin:0 auto;box-sizing:border-box;pointer-events:auto;animation:pi .5s}
-#QT{font-size:var(--fq);color:var(--qtxt);font-weight:700;text-shadow:0 0 5px var(--c); font-family:'Ruslan Display',sans-serif !important;}
+#QT{font-size:var(--fq);color:var(--qtxt);font-weight:700;text-shadow:0 0 5px var(--c); font-family:'${c.fn}',sans-serif !important;}
 #LB{position:absolute;top:80px;right:20px;display:flex;gap:10px;pointer-events:none}
 .h{width:50px;height:50px;background-size:contain;background-repeat:no-repeat;background-position:center;display:inline-block;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3))}
 .h.br{animation:hba 2.5s forwards ease-out;z-index:100;position:relative}
@@ -43,14 +725,14 @@ html,body{width:100%;height:100%;background:transparent;
 .f.is-answer { width: var(--isz); height: var(--isz); }
 
 .il{
-    background: var(--lb);color:var(--cl); padding:4px 8px;border-radius:4px;
+    ${itemBgStyle}color:var(--cl); padding:4px 8px;border-radius:4px;
     font-size:var(--fa);font-weight:700; white-space:nowrap;
     text-shadow:0 0 2px #000;border:1px solid #ffffff50;
     position: relative; top: var(--tpos); 
-    font-family:'Ruslan Display',sans-serif !important;
+    font-family:'${c.fn}',sans-serif !important;
 }
 
-#MC{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:none;gap:20px;z-index:15}@media (max-width:768px),(pointer:coarse){#MC{display:flex}}.mc-btn{width:70px;height:70px;border-radius:50%;background:rgba(108,92,231,0.8);border:3px solid #fff;color:#fff;font-size:32px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.3);transition:0.1s}.mc-btn:active{transform:scale(0.9);background:rgba(108,92,231,1)}
+${mobileControlsCSS}
 
 .cf{position:absolute;width:10px;height:10px;background:#f00;top:-10px;z-index:25;pointer-events:none;opacity:0}
 @keyframes cfa{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
@@ -61,38 +743,38 @@ html,body{width:100%;height:100%;background:transparent;
 
 .md {
   background: var(--bg); border: 3px solid var(--c);
-  box-shadow: 0 0 30px var(--c), inset 0 0 30px rgba(0,0,0,0.6);
+  ${glowStyle}
   border-radius: 25px !important; width: 75% !important; max-width: 580px !important; height: auto !important; max-height: 70vh !important;
   overflow-y: auto; box-sizing: border-box !important; padding: 38px 35px !important; margin: auto !important; color: var(--wtxt);
   display: flex !important; flex-direction: column !important; align-items: center !important; text-align: center !important; position: relative !important; transform: translateY(-80px) scale(0.98) !important; 
 }
-.md h1 { color: var(--wtxt); margin: 0 0 10px 0; font-size: 24px; text-transform: uppercase; text-shadow: 0 0 10px var(--c); width: 100%; font-family:'Ruslan Display',sans-serif !important; }
-.md p { color: var(--wtxt); font-size: 15px; margin: 0 0 20px 0; white-space: pre-line; line-height: 1.5; width: 100%; font-family:'Ruslan Display',sans-serif !important; opacity: 0.9; }
+.md h1 { color: var(--wtxt); margin: 0 0 10px 0; font-size: 24px; text-transform: uppercase; text-shadow: 0 0 10px var(--c); width: 100%; font-family:'${c.fn}',sans-serif !important; }
+.md p { color: var(--wtxt); font-size: 15px; margin: 0 0 20px 0; white-space: pre-line; line-height: 1.5; width: 100%; font-family:'${c.fn}',sans-serif !important; opacity: 0.9; }
 .game-btn {
   display: flex; align-items: center; justify-content: center;
   width: auto; max-width: 250px; min-width: 160px; height: 46px; padding: 0 30px;
   background: var(--c); border-radius: 50px; color: #fff; font-weight: 800; font-size: 15px;
   text-transform: uppercase; cursor: pointer; box-shadow: 0 0 15px var(--c);
   transition: all 0.1s; user-select: none; border: 2px solid #fff; line-height: 1 !important; 
-  font-family:'Ruslan Display',sans-serif !important; touch-action:manipulation;
+  font-family:'${c.fn}',sans-serif !important; touch-action:manipulation;
 }
 .game-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px var(--c); }
 .game-btn:active { transform: scale(0.95); }
-.ft{position:absolute;font-weight:700;font-size:24px;pointer-events:none;animation:fu 1s forwards;z-index:15;text-shadow:2px 2px 0 #000; font-family:'Ruslan Display',sans-serif !important;}
+.ft{position:absolute;font-weight:700;font-size:24px;pointer-events:none;animation:fu 1s forwards;z-index:15;text-shadow:2px 2px 0 #000; font-family:'${c.fn}',sans-serif !important;}
 @keyframes fu{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
 @keyframes pi{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
 </style>
 </head>
-<body><div id="GC"><div id="UI"><div class="tb"><button id="PB">||</button><div class="pc"><div id="PF" class="pf"></div></div></div><div id="LB"></div><div id="QB"><div id="QT">...</div></div></div><div id="H"></div><div id="MC"><button class="mc-btn" id="MCL">←</button><button class="mc-btn" id="MCR">→</button></div><div id="O" class="ov"><div class="md"><h1 id="OT"></h1><p id="OD"></p><div id="OB" class="game-btn">OK</div></div></div></div>
+<body><div id="GC"><div id="UI"><div class="tb"><button id="PB">||</button><div class="pc"><div id="PF" class="pf"></div></div></div><div id="LB"></div><div id="QB"><div id="QT">...</div></div></div><div id="H"></div>${mobileControlsHTML}<div id="O" class="ov"><div class="md"><h1 id="OT"></h1><p id="OD"></p><div id="OB" class="game-btn">OK</div></div></div></div>
 <script>
 (function(){
 const C={
-    li:"https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif",hi:"https://img.genially.com/684ea2da1b51060014c50e97/4e2c4c8a-5a17-4c32-95e1-7cc360b44a84.png",bi:"https://img.genially.com/684ea2da1b51060014c50e97/91910846-d855-4c4b-8561-5ff0edaa87ad.png",i1:"https://img.genially.com/684ea2da1b51060014c50e97/33b8d640-53fd-4b63-b5df-f7df01a72b2f.png",i2:"https://img.genially.com/684ea2da1b51060014c50e97/5857090c-baea-4b09-bb56-cda2472b1b19.png",bli:"https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif",bsc:"https://img.genially.com/684ea2da1b51060014c50e97/516bf8aa-cb50-433c-98ed-500cc8bb4696.png",
-    hs:6,fs:2,si:900,ml:3,qs:[{"text":"Столица России?","correct":["Москва","москва"],"wrong":["Питер","Казань"]},{"text":"2+2=?","correct":["4","четыре"],"wrong":["5","3"]},{"text":"Цвет неба?","correct":["Синий","Голубой"],"wrong":["Зелёный","Красный"]}],tx:{t:"ПОЙМАЙ ПРЕДМЕТЫ",d:"Используй ← или → чтобы поймать правильные ответы. Избегай бомб и неправильных ответов!",w:"ПОБЕДА!",l:"Ой!",bs:"ИГРАТЬ",bc:"ПРОДОЛЖИТЬ",br:"ЕЩЁ РАЗ"},
-    prob:{b:0.15,l:0.05,s:0.05,c:0.4,w:0.35},
+    li:"${c.l}",hi:"${c.h}",bi:"${c.b}",i1:"${c.i1}",i2:"${c.i2}",bli:"${c.bli}",bsc:"${c.bsc}",
+    hs:6,fs:${c.sp},si:${c.fr},ml:${c.lives},qs:${qs},tx:{t:"${c.tt}",d:"${c.td}",w:"${c.tw}",l:"${c.tl}",bs:"${c.btnStart || 'ИГРАТЬ'}",bc:"${c.btnContinue || 'ПРОДОЛЖИТЬ'}",br:"${c.btnRetry || 'ЕЩЁ РАЗ'}"},
+    prob:{b:${pBomb},l:${pLife},s:${pScore},c:${pCorrect},w:${pWrong}},
     snd:{
-        bomb:"",correct:"",wrong:"",
-        life:"",bonus:"",win:"",lose:""
+        bomb:"${c.sndbomb}",correct:"${c.sndcorrect}",wrong:"${c.sndwrong}",
+        life:"${c.sndlife}",bonus:"${c.sndbonus}",win:"${c.sndwin}",lose:"${c.sndlose}"
     }
 };
 let s={rn:0,pa:0,qi:0,lv:C.ml,hx:0,hf:0,ao:[],lt:0,tm:0,af:0,k:{l:0,r:0},bp:0}; 
@@ -238,7 +920,7 @@ function ss(){E.c.classList.remove('ss');void E.c.offsetWidth;E.c.classList.add(
 function sft(t,x,y,c){const e=D.createElement('div');e.className='ft';e.textContent=t;e.style.color=c;e.style.left=x+"px";e.style.top=y+"px";D.body.appendChild(e);setTimeout(()=>e.remove(),1000);}
 function go(){s.rn=0;if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);so(2);}
 function wg(){s.rn=0;if(s.af)cancelAnimationFrame(s.af);clearInterval(s.tm);E.pf.style.width='100%';so(3);}
-function fc(){const c=['#d13447','#ffbf00','#263672','#7b2cbf','#8ac926','#1982c4'];for(let i=0;i<150;i++){const e=D.createElement('div');e.className='cf';e.style.backgroundColor=c[Math.floor(Math.random()*c.length)];e.style.left=Math.random()*100+'vw';const d=Math.random()*3+2;e.style.animation=`cfa ${d}s linear forwards`;e.style.animationDelay=Math.random()*2+'s';const s=Math.random()*10+5;e.style.width=s+'px';e.style.height=s*0.6+'px';E.c.appendChild(e);}}
+function fc(){const c=['#d13447','#ffbf00','#263672','#7b2cbf','#8ac926','#1982c4'];for(let i=0;i<150;i++){const e=D.createElement('div');e.className='cf';e.style.backgroundColor=c[Math.floor(Math.random()*c.length)];e.style.left=Math.random()*100+'vw';const d=Math.random()*3+2;e.style.animation=\`cfa \${d}s linear forwards\`;e.style.animationDelay=Math.random()*2+'s';const s=Math.random()*10+5;e.style.width=s+'px';e.style.height=s*0.6+'px';E.c.appendChild(e);}}
 function rs(){s.hx=(E.c.offsetWidth-100)/2;E.h.style.left=s.hx+"px";}
 
 // МОБИЛЬНОЕ УПРАВЛЕНИЕ
@@ -262,4 +944,9 @@ function ev(){
     setupMobile();
 }
 I();})();
-</script></body></html>
+<\/script></body></html>`;
+    return html;
+}
+</script>
+</body>
+</html>

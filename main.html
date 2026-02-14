@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Поймай предмет</title>
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #0a0e27;
+  font-family: 'Ruslan Display', 'Arial', sans-serif;
+  overflow: hidden;
+}
+
+#game-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
+
+:root {
+  --color-accent: #a29bfe;
+  --color-bg: #1a1a1a;
+  --color-text: #ffffff;
+  --font-size-question: 28px;
+  --font-size-answer: 20px;
+  --size-item: 70px;
+  --size-hero: 150px;
+}
+
+/* UI */
+#ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 50px 30px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  pointer-events: auto;
+}
+
+.progress-container {
+  flex: 1;
+  max-width: 600px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9b59b6, #8e44ad);
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+#question-box {
+  background: #111111;
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 0 10px var(--color-accent);
+  color: #fff;
+  border-radius: 18px;
+  padding: 18px 24px;
+  text-align: center;
+  max-width: 820px;
+  margin: 0 auto;
+  pointer-events: auto;
+  animation: popIn 0.5s;
+}
+
+#question-text {
+  font-size: var(--font-size-question);
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 0 5px var(--color-accent);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Lives */
+#lives-bar {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.heart {
+  width: 50px;
+  height: 50px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: inline-block;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+}
+
+.heart.break {
+  animation: heartBreak 2.5s forwards ease-out;
+  z-index: 100;
+  position: relative;
+}
+
+@keyframes heartBreak {
+  0% { transform: scale(1); filter: brightness(1); }
+  10% { transform: scale(1.1) rotate(-5deg); filter: brightness(2) sepia(1); }
+  100% { transform: translateY(-150px) scale(1.2) rotate(-20deg); opacity: 0; }
+}
+
+/* Hero */
+#hero {
+  position: absolute;
+  bottom: 30px;
+  width: var(--size-hero);
+  height: var(--size-hero);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transform-origin: center bottom;
+  transition: transform 0.1s linear;
+  z-index: 5;
+}
+
+/* Falling items */
+.falling-item {
+  position: absolute;
+  top: -100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  will-change: top;
+  z-index: 4;
+  width: var(--size-item);
+  height: var(--size-item);
+}
+
+.item-label {
+  background: #000;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: var(--font-size-answer);
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 0 2px #000;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile controls */
+#mobile-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  gap: 20px;
+  z-index: 15;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  #mobile-controls {
+    display: flex;
+  }
+}
+
+.mobile-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(108, 92, 231, 0.8);
+  border: 3px solid #fff;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: 0.1s;
+}
+
+.mobile-btn:active {
+  transform: scale(0.9);
+  background: rgba(108, 92, 231, 1);
+}
+
+/* Overlay */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: 0.3s;
+  padding: 50px 30px;
+}
+
+.overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal {
+  background: var(--color-bg);
+  border: 3px solid var(--color-accent);
+  box-shadow: 0 0 30px var(--color-accent), inset 0 0 30px rgba(0, 0, 0, 0.6);
+  border-radius: 25px;
+  width: 75%;
+  max-width: 580px;
+  height: auto;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 38px 35px;
+  margin: auto;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.modal h1 {
+  color: var(--color-text);
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--color-accent);
+}
+
+.modal p {
+  color: var(--color-text);
+  font-size: 15px;
+  margin: 0 0 20px 0;
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+.game-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  max-width: 250px;
+  min-width: 160px;
+  height: 46px;
+  padding: 0 30px;
+  background: var(--color-accent);
+  border-radius: 50px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 15px var(--color-accent);
+  transition: all 0.1s;
+  border: 2px solid #fff;
+  touch-action: manipulation;
+}
+
+.game-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px var(--color-accent);
+}
+
+.game-btn:active {
+  transform: scale(0.95);
+}
+
+/* Floating text */
+.floating-text {
+  position: absolute;
+  font-weight: 700;
+  font-size: 24px;
+  pointer-events: none;
+  animation: floatUp 1s forwards;
+  z-index: 15;
+  text-shadow: 2px 2px 0 #000;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-50px); }
+}
+
+/* Confetti */
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #f00;
+  top: -10px;
+  z-index: 25;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0% { transform: translate(1px, 1px); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  30% { transform: translate(3px, 2px); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  90% { transform: translate(1px, 2px); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <div id="ui">
+    <div class="top-bar">
+      <div class="progress-container">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
+    <div id="lives-bar"></div>
+    <div id="question-box">
+      <div id="question-text">...</div>
+    </div>
+  </div>
+  
+  <div id="hero"></div>
+  
+  <div id="mobile-controls">
+    <button class="mobile-btn" id="btn-left">←</button>
+    <button class="mobile-btn" id="btn-right">→</button>
+  </div>
+  
+  <div id="overlay" class="overlay">
+    <div class="modal">
+      <h1 id="overlay-title"></h1>
+      <p id="overlay-desc"></p>
+      <div id="overlay-btn" class="game-btn">OK</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Конфигурация игры
+  const CONFIG = {
+    heroImg: "https://img.genially.com/684ea2da1b51060014c50e97/4e2c4c8a-5a17-4c32-95e1-7cc360b44a84.png",
+    bombImg: "https://img.genially.com/684ea2da1b51060014c50e97/91910846-d855-4c4b-8561-5ff0edaa87ad.png",
+    lifeImg: "https://img.genially.com/684ea2da1b51060014c50e97/56159391-2288-48d7-8264-2e7f0aa2f799.gif",
+    skinImg1: "https://img.genially.com/684ea2da1b51060014c50e97/33b8d640-53fd-4b63-b5df-f7df01a72b2f.png",
+    skinImg2: "https://img.genially.com/684ea2da1b51060014c50e97/5857090c-baea-4b09-bb56-cda2472b1b19.png",
+    
+    heroSpeed: 6,
+    fallSpeed: 2,
+    spawnInterval: 900,
+    maxLives: 3,
+    
+    questions: [
+      { text: "Столица России?", correct: ["Москва", "москва"], wrong: ["Питер", "Казань"] },
+      { text: "2+2=?", correct: ["4", "четыре"], wrong: ["5", "3"] },
+      { text: "Цвет неба?", correct: ["Синий", "Голубой"], wrong: ["Зелёный", "Красный"] }
+    ],
+    
+    probabilities: {
+      bomb: 0.15,
+      correct: 0.5,
+      wrong: 0.35
+    }
+  };
+
+  // Состояние игры
+  let state = {
+    running: 0,
+    paused: 0,
+    questionIndex: 0,
+    lives: CONFIG.maxLives,
+    heroX: 0,
+    heroFlip: 0,
+    activeObjects: [],
+    lastTime: 0,
+    spawnTimer: 0,
+    animationFrame: 0,
+    keys: { left: 0, right: 0 },
+    bonusProgress: 0
+  };
+
+  // DOM элементы
+  const DOM = {
+    container: document.getElementById('game-container'),
+    hero: document.getElementById('hero'),
+    livesBar: document.getElementById('lives-bar'),
+    questionText: document.getElementById('question-text'),
+    progressFill: document.getElementById('progress-fill'),
+    overlay: document.getElementById('overlay'),
+    overlayTitle: document.getElementById('overlay-title'),
+    overlayDesc: document.getElementById('overlay-desc'),
+    overlayBtn: document.getElementById('overlay-btn')
+  };
+
+  // Аудио контекст
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const audioCtx = new AudioContext();
+
+  function playTone(type, freq, duration, volume = 0.1) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  function playCorrect() {
+    playTone('sine', 1046.5, 0.1);
+    setTimeout(() => playTone('sine', 1568, 0.2), 100);
+  }
+
+  function playWrong() {
+    playTone('sawtooth', 150, 0.3, 0.2);
+  }
+
+  function playBomb() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.5, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 800;
+    filter.frequency.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+  }
+
+  function playWin() {
+    [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => 
+      setTimeout(() => playTone('square', f, 0.3, 0.1), i * 100)
+    );
+  }
+
+  function playLose() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 1);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1);
+  }
+
+  // Инициализация
+  function init() {
+    DOM.hero.style.backgroundImage = `url("${CONFIG.heroImg}")`;
+    setupEvents();
+    resetHeroPosition();
+    updateLives(1);
+    showOverlay(0);
+  }
+
+  // Оверлей
+  function showOverlay(mode) {
+    DOM.overlay.classList.remove('hidden');
+    if (mode === 0) {
+      setOverlayText(
+        "ПОЙМАЙ ПРЕДМЕТЫ",
+        "Используй ← или → чтобы поймать правильные ответы. Избегай бомб и неправильных ответов!",
+        "ИГРАТЬ",
+        startGame
+      );
+    } else if (mode === 2) {
+      setOverlayText("Ой!", "", "ЕЩЁ РАЗ", startGame);
+      playLose();
+    } else if (mode === 3) {
+      setOverlayText("ПОБЕДА!", "", "ЕЩЁ РАЗ", startGame);
+      playWin();
+      fireConfetti();
+    }
+  }
+
+  function setOverlayText(title, desc, btnText, btnFunc) {
+    DOM.overlayTitle.innerText = title;
+    DOM.overlayDesc.innerText = desc;
+    DOM.overlayBtn.innerText = btnText;
+    DOM.overlayBtn.onclick = () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      btnFunc();
+    };
+  }
+
+  function hideOverlay() {
+    DOM.overlay.classList.add('hidden');
+  }
+
+  // Старт игры
+  function startGame() {
+    if (state.animationFrame) cancelAnimationFrame(state.animationFrame);
+    clearInterval(state.spawnTimer);
+    document.querySelectorAll('.confetti').forEach(c => c.remove());
+    
+    state.lives = CONFIG.maxLives;
+    state.questionIndex = 0;
+    state.bonusProgress = 0;
+    state.activeObjects.forEach(o => o.el.remove());
+    state.activeObjects = [];
+    state.running = 1;
+    state.paused = 0;
+    state.lastTime = performance.now();
+    
+    updateLives(1);
+    loadQuestion(0);
+    hideOverlay();
+    
+    state.animationFrame = requestAnimationFrame(gameLoop);
+    state.spawnTimer = setInterval(spawnObject, CONFIG.spawnInterval);
+  }
+
+  // Загрузка вопроса
+  function loadQuestion(index) {
+    if (index >= CONFIG.questions.length) {
+      winGame();
+      return;
+    }
+    const question = CONFIG.questions[index];
+    DOM.questionText.textContent = question.text;
+    const box = document.getElementById('question-box');
+    box.style.animation = 'none';
+    box.offsetHeight;
+    box.style.animation = 'popIn 0.5s';
+  }
+
+  // Игровой цикл
+  function gameLoop(time) {
+    if (!state.running || state.paused) return;
+    const deltaTime = (time - state.lastTime) / 16;
+    state.lastTime = time;
+    
+    updateHero(deltaTime);
+    updateObjects(deltaTime);
+    
+    state.animationFrame = requestAnimationFrame(gameLoop);
+  }
+
+  // Обновление героя
+  function updateHero(dt) {
+    const speed = CONFIG.heroSpeed * dt;
+    const containerRect = DOM.container.getBoundingClientRect();
+    const heroWidth = DOM.hero.offsetWidth;
+    
+    if (state.keys.left) {
+      state.heroX -= speed;
+      state.heroFlip = 1;
+    }
+    if (state.keys.right) {
+      state.heroX += speed;
+      state.heroFlip = 0;
+    }
+    
+    if (state.heroX < 0) state.heroX = 0;
+    if (state.heroX > containerRect.width - heroWidth) state.heroX = containerRect.width - heroWidth;
+    
+    DOM.hero.style.left = state.heroX + "px";
+    DOM.hero.style.transform = 'scaleX(' + (state.heroFlip ? -1 : 1) + ')';
+  }
+
+  // Обновление объектов
+  function updateObjects(dt) {
+    const gameRect = DOM.container.getBoundingClientRect();
+    const heroRect = DOM.hero.getBoundingClientRect();
+    const hitBox = {
+      left: heroRect.left + 20,
+      right: heroRect.right - 20,
+      top: heroRect.top + 30,
+      bottom: heroRect.bottom
+    };
+    
+    for (let i = state.activeObjects.length - 1; i >= 0; i--) {
+      if (i >= state.activeObjects.length) break;
+      const obj = state.activeObjects[i];
+      if (!obj) continue;
+      
+      obj.y += obj.speed * dt;
+      obj.el.style.top = obj.y + "px";
+      
+      if (obj.y > gameRect.height) {
+        obj.el.remove();
+        state.activeObjects.splice(i, 1);
+        continue;
+      }
+      
+      const objRect = obj.el.getBoundingClientRect();
+      if (objRect.right > hitBox.left && objRect.left < hitBox.right &&
+          objRect.bottom > hitBox.top && objRect.top < hitBox.bottom) {
+        handleCatch(obj, i);
+        if (state.activeObjects.length === 0) break;
+      }
+    }
+  }
+
+  // Создание объекта
+  function spawnObject() {
+    if (!state.running || state.paused) return;
+    if (state.questionIndex >= CONFIG.questions.length) return;
+    
+    const question = CONFIG.questions[state.questionIndex];
+    if (!question || !question.correct || question.correct.length === 0) return;
+    
+    const rand = Math.random();
+    let type, text, isCorrect;
+    let sum = 0;
+    
+    if (rand < (sum += CONFIG.probabilities.bomb)) {
+      type = 'bomb';
+    } else if (rand < (sum += CONFIG.probabilities.correct)) {
+      type = 'answer';
+      isCorrect = 1;
+      text = question.correct[Math.floor(Math.random() * question.correct.length)];
+    } else {
+      type = 'answer';
+      isCorrect = 0;
+      text = question.wrong[Math.floor(Math.random() * question.wrong.length)];
+    }
+    
+    createFallingObject(type, text, isCorrect);
+  }
+
+  function createFallingObject(type, text, isCorrect) {
+    const el = document.createElement('div');
+    el.classList.add('falling-item');
+    
+    if (type === 'bomb') {
+      el.style.backgroundImage = `url("${CONFIG.bombImg}")`;
+    } else {
+      const bg = Math.random() < 0.5 ? CONFIG.skinImg1 : CONFIG.skinImg2;
+      el.style.backgroundImage = `url("${bg}")`;
+      const label = document.createElement('div');
+      label.className = 'item-label';
+      label.textContent = text;
+      el.appendChild(label);
+    }
+    
+    const gameWidth = DOM.container.offsetWidth;
+    const x = Math.random() * (gameWidth - 110) + 20;
+    el.style.left = x + "px";
+    
+    DOM.container.appendChild(el);
+    state.activeObjects.push({
+      el: el,
+      x: x,
+      y: -100,
+      speed: Number(CONFIG.fallSpeed) + Math.random() * 1.5,
+      type: type,
+      isCorrect: isCorrect
+    });
+  }
+
+  // Обработка поимки
+  function handleCatch(obj, index) {
+    obj.el.remove();
+    state.activeObjects.splice(index, 1);
+    
+    const heroRect = DOM.hero.getBoundingClientRect();
+    const centerX = heroRect.left + heroRect.width / 2;
+    
+    if (obj.type === 'bomb') {
+      playBomb();
+      loseLife();
+      shake();
+      showFloatingText("-1 ❤️", centerX, heroRect.top, "red");
+    } else {
+      if (obj.isCorrect) {
+        playCorrect();
+        showFloatingText("Верно!", centerX, heroRect.top, "#4caf50");
+        nextQuestion();
+      } else {
+        playWrong();
+        loseLife();
+        showFloatingText("Ошибка!", centerX, heroRect.top, "orange");
+      }
+    }
+  }
+
+  // Следующий вопрос
+  function nextQuestion() {
+    state.activeObjects.forEach(o => o.el.remove());
+    state.activeObjects = [];
+    state.questionIndex++;
+    updateProgress();
+    
+    if (state.questionIndex >= CONFIG.questions.length) {
+      winGame();
+    } else {
+      loadQuestion(state.questionIndex);
+    }
+  }
+
+  // Потеря жизни
+  function loseLife() {
+    state.lives--;
+    updateLives();
+    if (state.lives <= 0) {
+      gameOver();
+    }
+  }
+
+  // Обновление жизней
+  function updateLives(reset = 0) {
+    const container = DOM.livesBar;
+    if (reset) {
+      container.innerHTML = '';
+      for (let i = 0; i < state.lives; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.style.backgroundImage = `url("${CONFIG.lifeImg}")`;
+        container.appendChild(heart);
+      }
+    } else {
+      const hearts = container.querySelectorAll('.heart:not(.break)');
+      const currentCount = state.lives;
+      if (hearts.length > currentCount) {
+        for (let i = 0; i < hearts.length - currentCount; i++) {
+          const heartToBreak = hearts[hearts.length - 1 - i];
+          if (heartToBreak) {
+            heartToBreak.classList.add('break');
+            heartToBreak.addEventListener('animationend', () => heartToBreak.remove(), { once: true });
+          }
+        }
+      }
+    }
+    
+    const progress = CONFIG.questions.length > 0 
+      ? Math.min(100, (state.questionIndex / CONFIG.questions.length) * 100 + state.bonusProgress) 
+      : 0;
+    DOM.progressFill.style.width = progress + '%';
+  }
+
+  function updateProgress() {
+    const progress = CONFIG.questions.length > 0 
+      ? Math.min(100, (state.questionIndex / CONFIG.questions.length) * 100 + state.bonusProgress) 
+      : 0;
+    DOM.progressFill.style.width = progress + '%';
+  }
+
+  // Тряска экрана
+  function shake() {
+    DOM.container.classList.remove('shake');
+    void DOM.container.offsetWidth;
+    DOM.container.classList.add('shake');
+  }
+
+  // Плавающий текст
+  function showFloatingText(text, x, y, color) {
+    const el = document.createElement('div');
+    el.className = 'floating-text';
+    el.textContent = text;
+    el.style.color = color;
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+
+  // Поражение
+  function gameOver() {
+    state.running = 0;
+    if (state.animationFrame) cancelAnimationFrame(state.animationFrame);
+    clearInterval(state.spawnTimer);
+    showOverlay(2);
+  }
+
+  // Победа
+  function winGame() {
+    state.running = 0;
+    if (state.animationFrame) cancelAnimationFrame(state.animationFrame);
+    clearInterval(state.spawnTimer);
+    DOM.progressFill.style.width = '100%';
+    showOverlay(3);
+  }
+
+  // Конфетти
+  function fireConfetti() {
+    const colors = ['#d13447', '#ffbf00', '#263672', '#7b2cbf', '#8ac926', '#1982c4'];
+    for (let i = 0; i < 150; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      el.style.left = Math.random() * 100 + 'vw';
+      const duration = Math.random() * 3 + 2;
+      el.style.animation = `confettiFall ${duration}s linear forwards`;
+      el.style.animationDelay = Math.random() * 2 + 's';
+      const size = Math.random() * 10 + 5;
+      el.style.width = size + 'px';
+      el.style.height = size * 0.6 + 'px';
+      DOM.container.appendChild(el);
+    }
+  }
+
+  // Сброс позиции героя
+  function resetHeroPosition() {
+    state.heroX = (DOM.container.offsetWidth - 100) / 2;
+    DOM.hero.style.left = state.heroX + "px";
+  }
+
+  // События
+  function setupEvents() {
+    window.addEventListener('resize', resetHeroPosition);
+    
+    window.addEventListener('keydown', e => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') state.keys.left = 1;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') state.keys.right = 1;
+    });
+    
+    window.addEventListener('keyup', e => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') state.keys.left = 0;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') state.keys.right = 0;
+    });
+    
+    // Мобильные кнопки
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+    
+    if (btnLeft) {
+      btnLeft.addEventListener('touchstart', e => {
+        e.preventDefault();
+        state.keys.left = 1;
+      });
+      btnLeft.addEventListener('touchend', e => {
+        e.preventDefault();
+        state.keys.left = 0;
+      });
+    }
+    
+    if (btnRight) {
+      btnRight.addEventListener('touchstart', e => {
+        e.preventDefault();
+        state.keys.right = 1;
+      });
+      btnRight.addEventListener('touchend', e => {
+        e.preventDefault();
+        state.keys.right = 0;
+      });
+    }
+  }
+
+  // Запуск
+  init();
+})();
+</script>
+</body>
+</html>
